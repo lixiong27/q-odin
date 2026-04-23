@@ -1,0 +1,6 @@
+[submodule "odin_node"]
+	path = odin_node
+	url = git@gitlab.corp.qunar.com:flight_contact/odin_node.git
+[submodule "odin_server"]
+	path = odin_server
+	url = git@gitlab.corp.qunar.com:flight_contact/odin_server.git
