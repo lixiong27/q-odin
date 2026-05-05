@@ -128,7 +128,7 @@
             border-left: 4px solid #10b981;
         }
 
-        /* 画布控制器 - 移到顶部 */
+        /* 画布控制器 */
         .canvas-controls {
             background: #fff;
             border-radius: 8px;
@@ -154,7 +154,16 @@
             color: #3b82f6;
         }
 
-        /* 主容器 - 关键修改：支持表单隐藏时画布占满宽度 */
+        /* 帮助提示 */
+        .help-tip {
+            font-size: 12px;
+            color: #6b7280;
+            background: #fef3c7;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+        /* 主容器 */
         .main-container {
             display: flex;
             flex: 1;
@@ -162,7 +171,7 @@
             position: relative;
         }
 
-        /* 画布区域 - 关键修改：修复底部遮挡问题 */
+        /* 画布区域 */
         .canvas-area {
             flex: 1;
             background-color: #f9fafb;
@@ -170,29 +179,29 @@
             background-size: 20px 20px;
             position: relative;
             overflow: hidden;
-            min-height: 100%; /* 确保高度足够 */
+            min-height: 100%;
         }
 
-        /* 画布缩放容器 - 关键修改：修复滚动和高度问题 */
+        /* 画布缩放容器 */
         .canvas-wrapper {
             width: 100%;
             height: 100%;
             overflow: auto;
             cursor: grab;
-            position: relative; /* 添加相对定位 */
+            position: relative;
         }
         .canvas-wrapper:active {
             cursor: grabbing;
         }
 
-        /* 画布缩放内容 - 关键修改：修复底部遮挡 */
+        /* 画布缩放内容 */
         .canvas-content {
             transform-origin: center center;
             transition: transform 0.2s ease;
             min-width: 100%;
             min-height: 100%;
             position: relative;
-            padding-bottom: 100px; /* 底部预留空间，防止卡片被遮挡 */
+            padding-bottom: 100px;
         }
 
         /* 标签卡片 */
@@ -211,7 +220,7 @@
             font-size: 12px;
             transition: all 0.2s;
             user-select: none;
-            z-index: 10; /* 确保卡片在最上层 */
+            z-index: 10;
         }
 
         .node-card:hover {
@@ -225,9 +234,15 @@
             background: #eff6ff;
         }
 
-        .node-card.connecting {
-            border-color: #f59e0b;
-            background: #fef3c7;
+        .node-card.drag-over {
+            border: 2px dashed #10b981;
+            background: #d1fae5;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+        }
+
+        .node-card.drag-invalid {
+            border: 2px dashed #ef4444;
+            background: #fee2e2;
         }
 
         .node-card.category {
@@ -236,6 +251,10 @@
 
         .node-card.tag {
             border-left: 3px solid #10b981;
+        }
+
+        .node-card.disabled {
+            opacity: 0.5;
         }
 
         .node-name {
@@ -276,7 +295,31 @@
             left: 16px;
         }
 
-        /* 连接线 - 添加箭头样式 */
+        /* 节点类型标记 */
+        .node-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+        .node-badge.category {
+            background: #3b82f6;
+        }
+        .node-badge.tag {
+            background: #10b981;
+        }
+        .node-badge.leaf {
+            background: #f59e0b;
+        }
+
+        /* 连接线 */
         .connection-line {
             stroke: #94a3b8;
             stroke-width: 2;
@@ -290,20 +333,19 @@
             fill: none;
             pointer-events: none;
         }
-        /* 箭头标记定义 */
         .arrow-head {
             fill: #94a3b8;
         }
 
-        /* 右侧表单 - 关键修改：收起时完全隐藏，不占空间 */
+        /* 右侧表单 */
         .form-panel {
             width: 360px;
             background-color: #fff;
             border-left: 1px solid #e5e7eb;
             padding: 20px;
             overflow-y: auto;
-            transition: all 0.3s ease; /* 修改过渡效果 */
-            position: absolute; /* 改为绝对定位 */
+            transition: all 0.3s ease;
+            position: absolute;
             right: 0;
             top: 0;
             height: 100%;
@@ -311,8 +353,8 @@
         }
         .form-panel.collapsed {
             transform: translateX(100%);
-            width: 0; /* 收起时宽度为0 */
-            padding: 0; /* 收起时无内边距 */
+            width: 0;
+            padding: 0;
         }
         .toggle-panel-btn {
             position: absolute;
@@ -422,6 +464,15 @@
             background-color: #2563eb;
         }
 
+        .btn-delete {
+            background-color: #ef4444;
+            color: #fff;
+        }
+
+        .btn-delete:hover {
+            background-color: #dc2626;
+        }
+
         .empty-tip {
             text-align: center;
             color: #9ca3af;
@@ -442,6 +493,30 @@
             justify-content: center;
             color: #9ca3af;
             font-size: 18px;
+        }
+
+        /* 拖拽提示浮层 */
+        .drag-tooltip {
+            position: fixed;
+            background: #1f2937;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .drag-tooltip.visible {
+            opacity: 1;
+        }
+
+        /* 节点信息提示 */
+        .node-info {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
         }
     </style>
 </head>
@@ -479,12 +554,11 @@
                 <div class="top-bar">
                     <div class="top-left">
                         <div class="component-btn category" draggable="true" data-type="category">
-                            <span>标签分类</span>
+                            <span>📁 标签分类</span>
                         </div>
                         <div class="component-btn tag" draggable="true" data-type="tag">
-                            <span>叶子标签</span>
+                            <span>🏷️ 叶子标签</span>
                         </div>
-                        <!-- 画布控制器移到这里 -->
                         <div class="canvas-controls">
                             <button class="canvas-btn" id="zoomIn" title="放大">+</button>
                             <button class="canvas-btn" id="zoomOut" title="缩小">−</button>
@@ -492,6 +566,9 @@
                             <button class="canvas-btn" id="zoomFit" title="适应屏幕">⊡</button>
                             <button class="canvas-btn" id="fullscreen" title="全屏">⛶</button>
                         </div>
+                    </div>
+                    <div class="help-tip">
+                        💡 拖拽节点到目标节点上建立关联 | 右键断开关联 | 双击查看详情
                     </div>
                 </div>
 
@@ -511,19 +588,20 @@
                     <div class="form-panel" id="formPanel">
                         <button class="toggle-panel-btn" id="togglePanel">«</button>
                         <div class="empty-tip">请在画布中选择一个节点，编辑标签信息</div>
-                        
+
                         <!-- 标签分类表单 -->
                         <div id="categoryForm" class="hidden">
-                            <div class="form-title">标签分类配置</div>
+                            <div class="form-title">
+                                <span>标签分类配置</span>
+                                <button class="btn btn-delete" id="deleteCategory" style="padding: 4px 12px; font-size: 12px;">删除</button>
+                            </div>
                             <div class="form-group">
                                 <label class="form-label required">分类名称</label>
                                 <input type="text" class="form-input" id="categoryName" placeholder="请输入分类名称">
                             </div>
                             <div class="form-group">
-                                <label class="form-label required">父分类</label>
-                                <select class="form-select" id="parentCategory">
-                                    <option value="root">根目录</option>
-                                </select>
+                                <label class="form-label">父分类</label>
+                                <div class="node-info" id="parentCategoryInfo">无（根目录）</div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label required">是否是末级分类</label>
@@ -542,9 +620,14 @@
                             <div class="form-group" id="tagRuleGroup">
                                 <label class="form-label required">打标规则</label>
                                 <select class="form-select" id="tagRule">
-                                    <option value="single">单选、必填</option>
-                                    <option value="multiple">多选、可选</option>
+                                    <option value="single_required">单选、必填</option>
+                                    <option value="single_optional">单选、可选</option>
+                                    <option value="multiple_optional">多选、可选</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">分类描述</label>
+                                <textarea class="form-textarea" id="categoryDesc" placeholder="请输入分类描述"></textarea>
                             </div>
                             <div class="form-actions">
                                 <button class="btn btn-cancel">取消</button>
@@ -552,20 +635,20 @@
                             </div>
                         </div>
 
-                        <!-- 叶子标签表单 - 保留是否AI打标，移除AI打标规则输入框 -->
+                        <!-- 叶子标签表单 -->
                         <div id="tagForm" class="hidden">
-                            <div class="form-title">叶子标签配置</div>
+                            <div class="form-title">
+                                <span>叶子标签配置</span>
+                                <button class="btn btn-delete" id="deleteTag" style="padding: 4px 12px; font-size: 12px;">删除</button>
+                            </div>
                             <div class="form-group">
                                 <label class="form-label required">标签名称</label>
                                 <input type="text" class="form-input" id="tagName" placeholder="请输入标签名称">
                             </div>
                             <div class="form-group">
                                 <label class="form-label required">归属末级分类</label>
-                                <select class="form-select" id="belongCategory">
-                                    <option value="">请选择末级分类</option>
-                                </select>
+                                <div class="node-info" id="belongCategoryInfo">拖拽到末级分类上建立关联</div>
                             </div>
-                            <!-- 保留是否AI打标选项 -->
                             <div class="form-group">
                                 <label class="form-label required">是否AI打标</label>
                                 <div class="radio-group">
@@ -579,9 +662,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- 移除了AI打标规则输入框 -->
+                            <div class="form-group" id="aiDescGroup">
+                                <label class="form-label">AI打标描述</label>
+                                <textarea class="form-textarea" id="aiDesc" placeholder="请输入AI打标描述，用于指导AI识别"></textarea>
+                            </div>
                             <div class="form-group">
-                                <label class="form-label">标签描述（非必填）</label>
+                                <label class="form-label">标签描述</label>
                                 <textarea class="form-textarea" id="tagDesc" placeholder="请输入标签描述"></textarea>
                             </div>
                             <div class="form-actions">
@@ -595,11 +681,13 @@
         </div>
     </div>
 
+    <!-- 拖拽提示浮层 -->
+    <div class="drag-tooltip" id="dragTooltip"></div>
+
     <script>
         // 全局状态
         let nodes = [];
         let selectedNode = null;
-        let connectingNode = null; // 连线模式节点
         let nodeIdCounter = 0;
         let scale = 1;
         const minScale = 0.5;
@@ -617,25 +705,22 @@
         const tagForm = document.getElementById('tagForm');
         const componentBtns = document.querySelectorAll('.component-btn');
         const togglePanel = document.getElementById('togglePanel');
-        
-        // 新增DOM元素
+        const dragTooltip = document.getElementById('dragTooltip');
+
         const navItems = document.querySelectorAll('.nav-item');
         const contentLibraryPage = document.getElementById('contentLibraryPage');
         const tagManagementPage = document.getElementById('tagManagementPage');
         const isLeafRadios = document.querySelectorAll('input[name="isLeaf"]');
         const tagRuleGroup = document.getElementById('tagRuleGroup');
-        // 新增：是否AI打标单选框
         const isAiTagRadios = document.querySelectorAll('input[name="isAiTag"]');
+        const aiDescGroup = document.getElementById('aiDescGroup');
 
-        // ==================== 1. 左侧导航菜单和顶部系统名称 ====================
-        // 导航菜单切换
+        // ==================== 1. 左侧导航菜单 ====================
         navItems.forEach(item => {
             item.addEventListener('click', () => {
-                // 移除所有active状态
                 navItems.forEach(nav => nav.classList.remove('active'));
-                // 添加当前active状态
                 item.classList.add('active');
-                
+
                 const page = item.dataset.page;
                 if (page === 'content-library') {
                     contentLibraryPage.classList.remove('hidden');
@@ -647,10 +732,9 @@
             });
         });
 
-        // ==================== 2. 标签分类表单 - 末级分类控制打标规则显示 ====================
+        // ==================== 2. 表单联动 ====================
         isLeafRadios.forEach(radio => {
             radio.addEventListener('change', () => {
-                // 选择"是"显示打标规则，选择"否"隐藏
                 if (radio.value === '1') {
                     tagRuleGroup.classList.remove('hidden');
                 } else {
@@ -659,87 +743,160 @@
             });
         });
 
-        // ==================== 3. 开关联动 - 上级关闭自动关闭所有下级 ====================
-        // 递归关闭所有子节点
+        isAiTagRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.value === '1') {
+                    aiDescGroup.classList.remove('hidden');
+                } else {
+                    aiDescGroup.classList.add('hidden');
+                }
+            });
+        });
+
+        // ==================== 3. 开关联动 ====================
         function disableChildNodes(parentId) {
-            // 找到所有直接子节点
             const childNodes = nodes.filter(node => node.parentId === parentId);
-            
+
             childNodes.forEach(child => {
-                // 关闭当前子节点
                 child.enabled = false;
                 const childEl = document.getElementById(child.id);
                 if (childEl) {
                     const toggle = childEl.querySelector('.toggle-switch');
                     toggle.classList.remove('active');
+                    childEl.classList.add('disabled');
                 }
-                
-                // 递归关闭子节点的子节点
+
                 disableChildNodes(child.id);
             });
         }
 
-        // ==================== 4. 修复连线功能 BUG - 核心修改 ====================
-        // 开始连线
-        function startConnect(nodeId) {
-            connectingNode = nodes.find(n => n.id === nodeId);
-            document.querySelectorAll('.node-card').forEach(el => {
-                el.classList.remove('connecting');
-            });
-            document.getElementById(nodeId).classList.add('connecting');
-        }
-
-        // 建立父子连线 - 修复：一个子节点只能有一个父节点
-        function buildConnection(parentId) {
-            if (!connectingNode || connectingNode.id === parentId) return;
-            
-            // 核心修复：先移除该子节点之前的父节点关联
-            // 找到所有以当前节点为父节点的节点（清空反向关联）
-            nodes.forEach(node => {
-                if (node.parentId === connectingNode.id) {
-                    node.parentId = null;
+        function enableNodeAndCheckParent(nodeId) {
+            const node = nodes.find(n => n.id === nodeId);
+            if (node && node.parentId) {
+                const parent = nodes.find(n => n.id === node.parentId);
+                if (parent && !parent.enabled) {
+                    alert('请先启用父节点：' + parent.name);
+                    return false;
                 }
-            });
-            
-            // 设置当前节点的父节点（一个子节点只能有一个父节点）
-            connectingNode.parentId = parentId;
-            
-            connectingNode = null;
-            document.querySelectorAll('.node-card').forEach(el => {
-                el.classList.remove('connecting');
-            });
-            updateConnections(); // 重新渲染所有连线
-            updateParentOptions();
+            }
+            return true;
         }
 
-        // ==================== 5. 面板收起/展开 - 关键修改：配合样式调整 ====================
+        // ==================== 4. 拖拽关联核心功能 ====================
+        let isDraggingForConnect = false;
+        let draggingNode = null;
+        let dragStartX, dragStartY;
+        let dragOffsetX, dragOffsetY;
+        let potentialParent = null;
+
+        // 显示拖拽提示
+        function showDragTooltip(text, x, y) {
+            dragTooltip.textContent = text;
+            dragTooltip.style.left = (x + 15) + 'px';
+            dragTooltip.style.top = (y + 15) + 'px';
+            dragTooltip.classList.add('visible');
+        }
+
+        function hideDragTooltip() {
+            dragTooltip.classList.remove('visible');
+        }
+
+        // 检查是否可以建立父子关系
+        function canBeParent(parentNode, childNode) {
+            if (!parentNode || !childNode) return { valid: false, reason: '节点不存在' };
+            if (parentNode.id === childNode.id) return { valid: false, reason: '不能关联自己' };
+
+            // 分类可以关联分类（父子分类关系）
+            if (parentNode.type === 'category' && childNode.type === 'category') {
+                // 检查是否会形成循环
+                let current = parentNode;
+                while (current) {
+                    if (current.parentId === childNode.id) {
+                        return { valid: false, reason: '会形成循环关联' };
+                    }
+                    current = nodes.find(n => n.id === current.parentId);
+                }
+                return { valid: true, reason: '建立父子分类关系' };
+            }
+
+            // 只有末级分类才能关联叶子标签
+            if (parentNode.type === 'category' && childNode.type === 'tag') {
+                if (!parentNode.isLeaf) {
+                    return { valid: false, reason: '只有末级分类才能关联叶子标签' };
+                }
+                if (!parentNode.enabled) {
+                    return { valid: false, reason: '分类已停用' };
+                }
+                return { valid: true, reason: '建立标签归属关系' };
+            }
+
+            // 叶子标签不能作为父节点
+            if (parentNode.type === 'tag') {
+                return { valid: false, reason: '叶子标签不能作为父节点' };
+            }
+
+            return { valid: false, reason: '不支持的关联类型' };
+        }
+
+        // 建立父子关系
+        function establishConnection(parentId, childId) {
+            const parentNode = nodes.find(n => n.id === parentId);
+            const childNode = nodes.find(n => n.id === childId);
+
+            const result = canBeParent(parentNode, childNode);
+            if (!result.valid) {
+                alert(result.reason);
+                return false;
+            }
+
+            childNode.parentId = parentId;
+            updateConnections();
+            updateFormInfo();
+            return true;
+        }
+
+        // 更新表单中的关联信息
+        function updateFormInfo() {
+            if (!selectedNode) return;
+
+            if (selectedNode.type === 'category') {
+                const parentInfo = document.getElementById('parentCategoryInfo');
+                if (selectedNode.parentId) {
+                    const parent = nodes.find(n => n.id === selectedNode.parentId);
+                    parentInfo.textContent = parent ? parent.name : '无';
+                } else {
+                    parentInfo.textContent = '无（根目录）';
+                }
+            } else {
+                const belongInfo = document.getElementById('belongCategoryInfo');
+                if (selectedNode.parentId) {
+                    const parent = nodes.find(n => n.id === selectedNode.parentId);
+                    belongInfo.textContent = parent ? parent.name : '无';
+                } else {
+                    belongInfo.textContent = '拖拽到末级分类上建立关联';
+                }
+            }
+        }
+
+        // ==================== 5. 面板收起/展开 ====================
         togglePanel.addEventListener('click', () => {
             formPanel.classList.toggle('collapsed');
             togglePanel.textContent = formPanel.classList.contains('collapsed') ? '»' : '«';
-            // 触发画布重绘，确保占满宽度
             canvasContent.style.width = formPanel.classList.contains('collapsed') ? '100%' : 'calc(100% - 360px)';
-        });
-
-        // 点击画布空白区收起面板
-        canvasWrapper.addEventListener('click', (e) => {
-            if (e.target === canvasWrapper || e.target === canvasContent || e.target === canvas) {
-                collapsePanel();
-                clearSelection();
-            }
         });
 
         function collapsePanel() {
             formPanel.classList.add('collapsed');
             togglePanel.textContent = '»';
-            canvasContent.style.width = '100%'; // 画布占满宽度
+            canvasContent.style.width = '100%';
         }
         function expandPanel() {
             formPanel.classList.remove('collapsed');
             togglePanel.textContent = '«';
-            canvasContent.style.width = 'calc(100% - 360px)'; // 画布留出表单宽度
+            canvasContent.style.width = 'calc(100% - 360px)';
         }
 
-        // ==================== 6. 画布缩放控制 - 修复底部遮挡问题 ====================
+        // ==================== 6. 画布缩放控制 ====================
         document.getElementById('zoomIn').addEventListener('click', () => {
             scale = Math.min(maxScale, scale + scaleStep);
             updateCanvasScale();
@@ -758,37 +915,33 @@
                 updateCanvasScale();
                 return;
             }
-            
-            // 计算所有节点的边界 - 修复底部计算
+
             let minX = Infinity, minY = Infinity;
             let maxX = -Infinity, maxY = -Infinity;
-            
+
             nodes.forEach(node => {
                 minX = Math.min(minX, node.x);
                 minY = Math.min(minY, node.y);
                 maxX = Math.max(maxX, node.x + 140);
                 maxY = Math.max(maxY, node.y + 36);
             });
-            
-            // 计算适应屏幕的缩放比例
+
             const canvasWidth = canvasWrapper.clientWidth;
             const canvasHeight = canvasWrapper.clientHeight;
             const contentWidth = maxX - minX;
             const contentHeight = maxY - minY;
-            
+
             const scaleX = (canvasWidth * 0.9) / contentWidth;
             const scaleY = (canvasHeight * 0.9) / contentHeight;
             scale = Math.min(scaleX, scaleY, maxScale);
-            
+
             updateCanvasScale();
-            
-            // 滚动到中心位置 - 修复底部滚动
+
             canvasWrapper.scrollLeft = (contentWidth * scale - canvasWidth) / 2 + minX * scale;
             canvasWrapper.scrollTop = (contentHeight * scale - canvasHeight) / 2 + minY * scale;
-            
-            // 确保底部有足够滚动空间
+
             canvasWrapper.style.height = '100%';
-            canvasContent.style.minHeight = `${maxY + 50}px`; // 底部额外空间
+            canvasContent.style.minHeight = `${maxY + 50}px`;
         });
 
         document.getElementById('fullscreen').addEventListener('click', () => {
@@ -803,35 +956,57 @@
 
         function updateCanvasScale() {
             canvasContent.style.transform = `scale(${scale})`;
-            // 修复缩放后底部遮挡
             canvasContent.style.minHeight = `${canvasWrapper.clientHeight / scale + 100}px`;
         }
 
-        // ==================== 7. 原有功能增强 ====================
-        // 拖拽创建节点
+        // ==================== 7. 从工具栏拖拽创建节点 ====================
         componentBtns.forEach(btn => {
             btn.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('nodeType', btn.dataset.type);
+                e.dataTransfer.effectAllowed = 'copy';
             });
         });
 
         canvasWrapper.addEventListener('dragover', (e) => {
             e.preventDefault();
+            const nodeType = e.dataTransfer.types.includes('nodetype') ? null : e.dataTransfer.getData('nodeType');
+            if (nodeType || e.dataTransfer.types.includes('nodeid')) {
+                e.dataTransfer.dropEffect = nodeType ? 'copy' : 'move';
+            }
         });
 
         canvasWrapper.addEventListener('drop', (e) => {
             e.preventDefault();
-            const type = e.dataTransfer.getData('nodeType');
-            if (!type) return;
+            const nodeType = e.dataTransfer.getData('nodeType');
+            const nodeId = e.dataTransfer.getData('nodeId');
 
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / scale - 70;
-            const y = (e.clientY - rect.top) / scale - 18;
+            if (nodeType) {
+                // 从工具栏创建新节点
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / scale - 70;
+                const y = (e.clientY - rect.top) / scale - 18;
+                createNode(nodeType, x, y);
+            } else if (nodeId) {
+                // 节点拖拽到空白区域 - 断开关联
+                const node = nodes.find(n => n.id === nodeId);
+                if (node && node.parentId) {
+                    const confirmDisconnect = confirm('确定要断开与父节点的关联吗？');
+                    if (confirmDisconnect) {
+                        node.parentId = null;
+                        updateConnections();
+                        updateFormInfo();
+                    }
+                }
+            }
 
-            createNode(type, x, y);
+            // 清除所有拖拽状态
+            document.querySelectorAll('.node-card').forEach(el => {
+                el.classList.remove('drag-over', 'drag-invalid');
+            });
+            hideDragTooltip();
         });
 
-        // 创建节点 - 保留isAiTag属性（移除aiTagRule）
+        // ==================== 8. 创建节点 ====================
         function createNode(type, x, y) {
             const id = `node_${++nodeIdCounter}`;
             const nodeData = {
@@ -843,7 +1018,9 @@
                 enabled: true,
                 parentId: null,
                 isLeaf: type === 'category' ? true : null,
-                isAiTag: type === 'tag' ? true : null // 保留是否AI打标属性
+                isAiTag: type === 'tag' ? true : null,
+                tagRule: 'single_required',
+                description: ''
             };
             nodes.push(nodeData);
 
@@ -852,98 +1029,164 @@
             nodeEl.id = id;
             nodeEl.style.left = `${x}px`;
             nodeEl.style.top = `${y}px`;
+            nodeEl.draggable = true;
+
+            // 添加类型标记
+            const badge = document.createElement('div');
+            badge.className = `node-badge ${type}`;
+
             nodeEl.innerHTML = `
                 <div class="node-name">${nodeData.name}</div>
                 <div class="toggle-switch ${nodeData.enabled ? 'active' : ''}"></div>
             `;
+            nodeEl.appendChild(badge);
+
             canvas.appendChild(nodeEl);
 
-            makeDraggable(nodeEl, nodeData);
-
-            // 点击事件：选中 / 连线二合一
-            nodeEl.addEventListener('click', (e) => {
-                if (e.target.classList.contains('toggle-switch')) return;
-                
-                if (connectingNode) {
-                    // 连线模式：建立连接
-                    buildConnection(id);
-                } else {
-                    // 普通模式：选中节点
-                    selectNode(id);
-                    expandPanel();
-                }
-            });
-
-            // 双击开始连线
-            nodeEl.addEventListener('dblclick', (e) => {
-                e.preventDefault();
-                if (e.target.classList.contains('toggle-switch')) return;
-                startConnect(id);
-                expandPanel();
-            });
-
-            // 右键取消当前节点的父节点
-            nodeEl.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                nodeData.parentId = null;
-                updateConnections();
-                updateParentOptions();
-            });
-
-            // 开关 - 新增联动逻辑
-            const toggle = nodeEl.querySelector('.toggle-switch');
-            toggle.addEventListener('click', () => {
-                nodeData.enabled = !nodeData.enabled;
-                toggle.classList.toggle('active', nodeData.enabled);
-                
-                // 如果关闭当前节点，自动关闭所有下级节点
-                if (!nodeData.enabled) {
-                    disableChildNodes(nodeData.id);
-                }
-            });
-
+            setupNodeEvents(nodeEl, nodeData);
             selectNode(id);
             expandPanel();
         }
 
-        // 节点拖拽 - 修复底部拖拽问题
-        function makeDraggable(el, nodeData) {
-            let isDragging = false;
-            let startX, startY, startLeft, startTop;
+        // ==================== 9. 节点事件绑定 ====================
+        function setupNodeEvents(nodeEl, nodeData) {
+            // 拖拽开始
+            nodeEl.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('nodeId', nodeData.id);
+                e.dataTransfer.effectAllowed = 'move';
+                draggingNode = nodeData;
 
-            el.addEventListener('mousedown', (e) => {
+                // 延迟添加透明效果，避免拖拽预览也被透明
+                setTimeout(() => {
+                    nodeEl.style.opacity = '0.5';
+                }, 0);
+            });
+
+            // 拖拽结束
+            nodeEl.addEventListener('dragend', (e) => {
+                nodeEl.style.opacity = '1';
+                draggingNode = null;
+                document.querySelectorAll('.node-card').forEach(el => {
+                    el.classList.remove('drag-over', 'drag-invalid');
+                });
+                hideDragTooltip();
+            });
+
+            // 拖拽经过
+            nodeEl.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!draggingNode || draggingNode.id === nodeData.id) return;
+
+                const result = canBeParent(nodeData, draggingNode);
+                if (result.valid) {
+                    nodeEl.classList.add('drag-over');
+                    nodeEl.classList.remove('drag-invalid');
+                    showDragTooltip(result.reason, e.clientX, e.clientY);
+                } else {
+                    nodeEl.classList.add('drag-invalid');
+                    nodeEl.classList.remove('drag-over');
+                    showDragTooltip(result.reason, e.clientX, e.clientY);
+                }
+            });
+
+            // 拖拽离开
+            nodeEl.addEventListener('dragleave', (e) => {
+                nodeEl.classList.remove('drag-over', 'drag-invalid');
+                hideDragTooltip();
+            });
+
+            // 放置 - 建立关联
+            nodeEl.addEventListener('drop', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                if (e.target.classList.contains('toggle-switch') || connectingNode) return;
-                
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
+                nodeEl.classList.remove('drag-over', 'drag-invalid');
+                hideDragTooltip();
+
+                if (!draggingNode || draggingNode.id === nodeData.id) return;
+
+                const result = canBeParent(nodeData, draggingNode);
+                if (result.valid) {
+                    establishConnection(nodeData.id, draggingNode.id);
+                } else {
+                    alert(result.reason);
+                }
+            });
+
+            // 点击选中
+            nodeEl.addEventListener('click', (e) => {
+                if (e.target.classList.contains('toggle-switch')) return;
+                selectNode(nodeData.id);
+                expandPanel();
+            });
+
+            // 右键断开关联
+            nodeEl.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                if (nodeData.parentId) {
+                    const confirmDisconnect = confirm('确定要断开与父节点的关联吗？');
+                    if (confirmDisconnect) {
+                        nodeData.parentId = null;
+                        updateConnections();
+                        updateFormInfo();
+                    }
+                }
+            });
+
+            // 开关联动
+            const toggle = nodeEl.querySelector('.toggle-switch');
+            toggle.addEventListener('click', () => {
+                if (!nodeData.enabled) {
+                    // 启用时检查父节点
+                    if (!enableNodeAndCheckParent(nodeData.id)) {
+                        return;
+                    }
+                    nodeData.enabled = true;
+                    toggle.classList.add('active');
+                    nodeEl.classList.remove('disabled');
+                } else {
+                    // 停用时递归停用子节点
+                    nodeData.enabled = false;
+                    toggle.classList.remove('active');
+                    nodeEl.classList.add('disabled');
+                    disableChildNodes(nodeData.id);
+                }
+            });
+
+            // 鼠标按下 - 位置拖拽
+            let isPositionDragging = false;
+            let startPosX, startPosY, startLeft, startTop;
+
+            nodeEl.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('toggle-switch')) return;
+
+                isPositionDragging = true;
+                startPosX = e.clientX;
+                startPosY = e.clientY;
                 startLeft = nodeData.x;
                 startTop = nodeData.y;
-                el.style.zIndex = 1000;
+                nodeEl.style.zIndex = '100';
             });
 
             document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                const dx = (e.clientX - startX) / scale;
-                const dy = (e.clientY - startY) / scale;
+                if (!isPositionDragging) return;
+                const dx = (e.clientX - startPosX) / scale;
+                const dy = (e.clientY - startPosY) / scale;
                 nodeData.x = Math.max(0, startLeft + dx);
-                nodeData.y = Math.max(0, startTop + dy); // 允许y轴足够大，不限制底部
-                el.style.left = `${nodeData.x}px`;
-                el.style.top = `${nodeData.y}px`;
+                nodeData.y = Math.max(0, startTop + dy);
+                nodeEl.style.left = `${nodeData.x}px`;
+                nodeEl.style.top = `${nodeData.y}px`;
                 updateConnections();
-                
-                // 确保画布内容高度足够显示底部节点
+
                 canvasContent.style.minHeight = `${Math.max(canvasContent.clientHeight, nodeData.y + 100)}px`;
             });
 
             document.addEventListener('mouseup', () => {
-                isDragging = false;
-                el.style.zIndex = '';
+                isPositionDragging = false;
+                nodeEl.style.zIndex = '';
             });
         }
 
-        // 选中节点 - 保留是否AI打标逻辑（移除AI打标规则）
+        // ==================== 10. 选中节点 ====================
         function selectNode(id) {
             clearSelection();
             selectedNode = nodes.find(n => n.id === id);
@@ -957,33 +1200,35 @@
             if (selectedNode.type === 'category') {
                 categoryForm.classList.remove('hidden');
                 document.getElementById('categoryName').value = selectedNode.name;
-                // 设置父分类下拉框选中值
-                document.getElementById('parentCategory').value = selectedNode.parentId || 'root';
-                
-                // 设置是否末级分类单选框
+
                 if (selectedNode.isLeaf !== null) {
                     document.getElementById(selectedNode.isLeaf ? 'isLeafYes' : 'isLeafNo').checked = true;
-                    // 同步显示/隐藏打标规则
                     if (selectedNode.isLeaf) {
                         tagRuleGroup.classList.remove('hidden');
                     } else {
                         tagRuleGroup.classList.add('hidden');
                     }
                 }
+
+                document.getElementById('tagRule').value = selectedNode.tagRule || 'single_required';
+                document.getElementById('categoryDesc').value = selectedNode.description || '';
             } else {
                 tagForm.classList.remove('hidden');
                 document.getElementById('tagName').value = selectedNode.name;
-                // 设置归属分类下拉框选中值
-                document.getElementById('belongCategory').value = selectedNode.parentId || '';
-                document.getElementById('tagDesc').value = selectedNode.tagDesc || '';
-                
-                // 设置是否AI打标单选框
+                document.getElementById('tagDesc').value = selectedNode.description || '';
+
                 if (selectedNode.isAiTag !== null) {
                     document.getElementById(selectedNode.isAiTag ? 'isAiTagYes' : 'isAiTagNo').checked = true;
+                    if (selectedNode.isAiTag) {
+                        aiDescGroup.classList.remove('hidden');
+                    } else {
+                        aiDescGroup.classList.add('hidden');
+                    }
                 }
+                document.getElementById('aiDesc').value = selectedNode.aiDescription || '';
             }
 
-            updateParentOptions();
+            updateFormInfo();
         }
 
         function clearSelection() {
@@ -991,55 +1236,47 @@
                 el.classList.remove('selected');
             });
             selectedNode = null;
-            connectingNode = null;
-            document.querySelectorAll('.node-card.connecting').forEach(el => {
-                el.classList.remove('connecting');
-            });
-            
             emptyTip.classList.remove('hidden');
             categoryForm.classList.add('hidden');
             tagForm.classList.add('hidden');
         }
 
-        // 更新连接线 - 核心修改：添加单向箭头，修复连线逻辑
+        // ==================== 11. 更新连接线 ====================
         function updateConnections() {
-            connectionsSvg.innerHTML = ''; // 清空现有连线
-            
-            // 1. 定义箭头标记（只需要定义一次）
+            connectionsSvg.innerHTML = '';
+
+            // 定义箭头标记
             const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
             const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
             marker.setAttribute('id', 'arrowhead');
             marker.setAttribute('viewBox', '0 0 10 10');
-            marker.setAttribute('refX', '9'); // 箭头位置（靠近线段末端）
+            marker.setAttribute('refX', '9');
             marker.setAttribute('refY', '5');
             marker.setAttribute('markerWidth', '6');
             marker.setAttribute('markerHeight', '6');
-            marker.setAttribute('orient', 'auto'); // 自动旋转箭头方向
-            
+            marker.setAttribute('orient', 'auto');
+
             const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             polygon.setAttribute('points', '0 0, 10 5, 0 10');
             polygon.setAttribute('class', 'arrow-head');
             marker.appendChild(polygon);
             defs.appendChild(marker);
             connectionsSvg.appendChild(defs);
-            
-            // 2. 遍历所有节点，为每个有父节点的节点创建连线
+
+            // 绘制连线
             nodes.forEach(node => {
-                if (node.parentId && node.parentId !== 'root') {
+                if (node.parentId) {
                     const parent = nodes.find(n => n.id === node.parentId);
                     if (parent) {
-                        // 计算连线起点（父节点中心）和终点（子节点中心）
-                        const x1 = parent.x + 70; // 父节点水平中心
-                        const y1 = parent.y + 18; // 父节点垂直中心
-                        const x2 = node.x + 70;   // 子节点水平中心
-                        const y2 = node.y + 18;   // 子节点垂直中心
+                        const x1 = parent.x + 70;
+                        const y1 = parent.y + 18;
+                        const x2 = node.x + 70;
+                        const y2 = node.y + 18;
 
-                        // 创建贝塞尔曲线连线（父→子）
                         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                         const midX = (x1 + x2) / 2;
                         path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
                         path.setAttribute('class', 'connection-line');
-                        // 添加箭头标记（指向子节点）
                         path.setAttribute('marker-end', 'url(#arrowhead)');
                         connectionsSvg.appendChild(path);
                     }
@@ -1047,86 +1284,54 @@
             });
         }
 
-        // 更新父分类下拉
-        function updateParentOptions() {
-            const parentSelect = document.getElementById('parentCategory');
-            const belongSelect = document.getElementById('belongCategory');
-            
-            // 保存当前选中值
-            const parentSelectedValue = parentSelect.value;
-            const belongSelectedValue = belongSelect.value;
-            
-            // 重新构建下拉选项
-            parentSelect.innerHTML = '<option value="root">根目录</option>';
-            belongSelect.innerHTML = '<option value="">请选择末级分类</option>';
-
-            nodes.forEach(node => {
-                if (node.type === 'category' && (!selectedNode || node.id !== selectedNode.id)) {
-                    // 分类父节点下拉（排除自己）
-                    const opt1 = document.createElement('option');
-                    opt1.value = node.id;
-                    opt1.textContent = node.name;
-                    parentSelect.appendChild(opt1);
-
-                    // 标签归属分类下拉 - 只显示末级分类
-                    if (node.isLeaf) {
-                        const opt2 = document.createElement('option');
-                        opt2.value = node.id;
-                        opt2.textContent = node.name;
-                        belongSelect.appendChild(opt2);
-                    }
-                }
-            });
-
-            // 恢复选中值
-            if (parentSelectedValue) {
-                parentSelect.value = parentSelectedValue;
-            }
-            if (belongSelectedValue) {
-                belongSelect.value = belongSelectedValue;
-            }
-        }
-
-        // 保存 - 保留是否AI打标逻辑（移除AI打标规则）
+        // ==================== 12. 表单保存 ====================
         document.querySelectorAll('.btn-save').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (!selectedNode) return;
-                
+
                 if (selectedNode.type === 'category') {
                     const name = document.getElementById('categoryName').value.trim();
-                    const parentId = document.getElementById('parentCategory').value;
                     const isLeaf = document.querySelector('input[name="isLeaf"]:checked').value === '1';
-                    
-                    if (name) {
-                        selectedNode.name = name;
-                        document.getElementById(selectedNode.id).querySelector('.node-name').textContent = name;
+                    const tagRule = document.getElementById('tagRule').value;
+                    const description = document.getElementById('categoryDesc').value.trim();
+
+                    if (!name) {
+                        alert('请输入分类名称');
+                        return;
                     }
-                    
-                    // 更新父节点
-                    selectedNode.parentId = parentId === 'root' ? null : parentId;
-                    // 保存是否末级分类状态
+
+                    selectedNode.name = name;
                     selectedNode.isLeaf = isLeaf;
+                    selectedNode.tagRule = tagRule;
+                    selectedNode.description = description;
+
+                    document.getElementById(selectedNode.id).querySelector('.node-name').textContent = name;
+
+                    // 更新类型标记
+                    const badge = document.getElementById(selectedNode.id).querySelector('.node-badge');
+                    if (badge) {
+                        badge.className = `node-badge ${isLeaf ? 'leaf' : 'category'}`;
+                    }
                 } else {
                     const name = document.getElementById('tagName').value.trim();
-                    const parentId = document.getElementById('belongCategory').value;
-                    const tagDesc = document.getElementById('tagDesc').value.trim();
-                    // 保存是否AI打标状态
                     const isAiTag = document.querySelector('input[name="isAiTag"]:checked').value === '1';
-                    
-                    if (name) {
-                        selectedNode.name = name;
-                        document.getElementById(selectedNode.id).querySelector('.node-name').textContent = name;
+                    const aiDescription = document.getElementById('aiDesc').value.trim();
+                    const description = document.getElementById('tagDesc').value.trim();
+
+                    if (!name) {
+                        alert('请输入标签名称');
+                        return;
                     }
-                    
-                    // 更新父节点
-                    selectedNode.parentId = parentId || null;
-                    selectedNode.tagDesc = tagDesc;
-                    // 保存是否AI打标
+
+                    selectedNode.name = name;
                     selectedNode.isAiTag = isAiTag;
+                    selectedNode.aiDescription = aiDescription;
+                    selectedNode.description = description;
+
+                    document.getElementById(selectedNode.id).querySelector('.node-name').textContent = name;
                 }
-                
+
                 updateConnections();
-                updateParentOptions();
                 alert('保存成功');
             });
         });
@@ -1139,11 +1344,49 @@
             });
         });
 
-        // 画布拖动 - 修复底部滚动问题
+        // 删除节点
+        document.getElementById('deleteCategory').addEventListener('click', () => {
+            if (!selectedNode || selectedNode.type !== 'category') return;
+
+            // 检查是否有子节点
+            const hasChildren = nodes.some(n => n.parentId === selectedNode.id);
+            if (hasChildren) {
+                alert('该分类下存在子节点，请先删除或移除子节点');
+                return;
+            }
+
+            if (confirm('确定要删除该分类吗？')) {
+                const index = nodes.findIndex(n => n.id === selectedNode.id);
+                if (index > -1) {
+                    document.getElementById(selectedNode.id).remove();
+                    nodes.splice(index, 1);
+                    clearSelection();
+                    collapsePanel();
+                    updateConnections();
+                }
+            }
+        });
+
+        document.getElementById('deleteTag').addEventListener('click', () => {
+            if (!selectedNode || selectedNode.type !== 'tag') return;
+
+            if (confirm('确定要删除该标签吗？')) {
+                const index = nodes.findIndex(n => n.id === selectedNode.id);
+                if (index > -1) {
+                    document.getElementById(selectedNode.id).remove();
+                    nodes.splice(index, 1);
+                    clearSelection();
+                    collapsePanel();
+                    updateConnections();
+                }
+            }
+        });
+
+        // ==================== 13. 画布拖动 ====================
         let isPanning = false;
         let panStartX, panStartY;
         canvasWrapper.addEventListener('mousedown', (e) => {
-            if (e.target !== canvasWrapper && e.target !== canvasContent) return;
+            if (e.target !== canvasWrapper && e.target !== canvasContent && e.target !== canvas) return;
             isPanning = true;
             panStartX = canvasWrapper.scrollLeft + e.clientX;
             panStartY = canvasWrapper.scrollTop + e.clientY;
@@ -1157,16 +1400,67 @@
             isPanning = false;
         });
 
-        // 初始化 - 确保画布占满宽度
+        // ==================== 14. 初始化 ====================
         window.addEventListener('load', () => {
             canvasContent.style.width = formPanel.classList.contains('collapsed') ? '100%' : 'calc(100% - 360px)';
-            canvasContent.style.minHeight = '1000px'; // 初始高度足够
+            canvasContent.style.minHeight = '1000px';
         });
 
-        // 全屏变化时更新缩放
         document.addEventListener('fullscreenchange', () => {
             updateCanvasScale();
         });
+
+        // 创建示例节点
+        function createSampleNodes() {
+            // 创建分类
+            createNode('category', 100, 100);
+            nodes[0].name = '技术';
+            nodes[0].isLeaf = false;
+            document.getElementById(nodes[0].id).querySelector('.node-name').textContent = '技术';
+            document.getElementById(nodes[0].id).querySelector('.node-badge').className = 'node-badge category';
+
+            createNode('category', 300, 80);
+            nodes[1].name = '前端';
+            nodes[1].isLeaf = true;
+            nodes[1].parentId = nodes[0].id;
+            document.getElementById(nodes[1].id).querySelector('.node-name').textContent = '前端';
+            document.getElementById(nodes[1].id).querySelector('.node-badge').className = 'node-badge leaf';
+
+            createNode('category', 300, 180);
+            nodes[2].name = '后端';
+            nodes[2].isLeaf = true;
+            nodes[2].parentId = nodes[0].id;
+            document.getElementById(nodes[2].id).querySelector('.node-name').textContent = '后端';
+            document.getElementById(nodes[2].id).querySelector('.node-badge').className = 'node-badge leaf';
+
+            // 创建叶子标签
+            createNode('tag', 500, 60);
+            nodes[3].name = 'React';
+            nodes[3].parentId = nodes[1].id;
+            document.getElementById(nodes[3].id).querySelector('.node-name').textContent = 'React';
+
+            createNode('tag', 500, 110);
+            nodes[4].name = 'Vue';
+            nodes[4].parentId = nodes[1].id;
+            document.getElementById(nodes[4].id).querySelector('.node-name').textContent = 'Vue';
+
+            createNode('tag', 500, 160);
+            nodes[5].name = 'Java';
+            nodes[5].parentId = nodes[2].id;
+            document.getElementById(nodes[5].id).querySelector('.node-name').textContent = 'Java';
+
+            createNode('tag', 500, 210);
+            nodes[6].name = 'Go';
+            nodes[6].parentId = nodes[2].id;
+            document.getElementById(nodes[6].id).querySelector('.node-name').textContent = 'Go';
+
+            updateConnections();
+            clearSelection();
+            collapsePanel();
+        }
+
+        // 加载示例
+        createSampleNodes();
     </script>
 </body>
 </html>
