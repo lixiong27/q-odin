@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容中台 - 标签管理系统（思维导图版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background-color: #1e40af;
+            color: #fff;
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .system-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* 主布局容器 */
+        .layout-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧导航菜单 */
+        .sidebar {
+            width: 200px;
+            background-color: #fff;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        .nav-menu {
+            padding-top: 20px;
+        }
+        .nav-item {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background-color: #eff6ff;
+            color: #3b82f6;
+        }
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: #3b82f6;
+            border-left: 4px solid #3b82f6;
+        }
+
+        /* 内容区域 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部组件栏 */
+        .top-bar {
+            background-color: #fff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-left {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .component-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            cursor: grab;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .component-btn:hover {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .component-btn:active {
+            cursor: grabbing;
+        }
+
+        .component-btn.category {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .component-btn.tag {
+            border-left: 4px solid #10b981;
+        }
+
+        /* 画布控制器 - 移到顶部 */
+        .canvas-controls {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 6px;
+            display: flex;
+            gap: 4px;
+        }
+        .canvas-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f9fafb;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .canvas-btn:hover {
+            background: #eef2ff;
+            color: #3b82f6;
+        }
+
+        /* 主容器 - 关键修改：支持表单隐藏时画布占满宽度 */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 画布区域 - 关键修改：修复底部遮挡问题 */
+        .canvas-area {
+            flex: 1;
+            background-color: #f9fafb;
+            background-image: radial-gradient(#d1d5db 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+            position: relative;
+            overflow: hidden;
+            min-height: 100%; /* 确保高度足够 */
+        }
+
+        /* 画布缩放容器 - 关键修改：修复滚动和高度问题 */
+        .canvas-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            cursor: grab;
+            position: relative; /* 添加相对定位 */
+        }
+        .canvas-wrapper:active {
+            cursor: grabbing;
+        }
+
+        /* 画布缩放内容 - 关键修改：修复底部遮挡 */
+        .canvas-content {
+            transform-origin: center center;
+            transition: transform 0.2s ease;
+            min-width: 100%;
+            min-height: 100%;
+            position: relative;
+            padding-bottom: 100px; /* 底部预留空间，防止卡片被遮挡 */
+        }
+
+        /* 标签卡片 */
+        .node-card {
+            position: absolute;
+            width: 140px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            transition: all 0.2s;
+            user-select: none;
+            z-index: 10; /* 确保卡片在最上层 */
+        }
+
+        .node-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+
+        .node-card.selected {
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: #eff6ff;
+        }
+
+        .node-card.connecting {
+            border-color: #f59e0b;
+            background: #fef3c7;
+        }
+
+        .node-card.category {
+            border-left: 3px solid #3b82f6;
+        }
+
+        .node-card.tag {
+            border-left: 3px solid #10b981;
+        }
+
+        .node-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90px;
+        }
+
+        .toggle-switch {
+            width: 28px;
+            height: 14px;
+            background-color: #d1d5db;
+            border-radius: 7px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch.active {
+            background-color: #3b82f6;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+
+        .toggle-switch.active::after {
+            left: 16px;
+        }
+
+        /* 连接线 - 添加箭头样式 */
+        .connection-line {
+            stroke: #94a3b8;
+            stroke-width: 2;
+            fill: none;
+            pointer-events: none;
+        }
+        .connect-draft-line {
+            stroke: #f59e0b;
+            stroke-width: 2;
+            stroke-dasharray: 5,5;
+            fill: none;
+            pointer-events: none;
+        }
+        /* 箭头标记定义 */
+        .arrow-head {
+            fill: #94a3b8;
+        }
+
+        /* 右侧表单 - 关键修改：收起时完全隐藏，不占空间 */
+        .form-panel {
+            width: 360px;
+            background-color: #fff;
+            border-left: 1px solid #e5e7eb;
+            padding: 20px;
+            overflow-y: auto;
+            transition: all 0.3s ease; /* 修改过渡效果 */
+            position: absolute; /* 改为绝对定位 */
+            right: 0;
+            top: 0;
+            height: 100%;
+            z-index: 20;
+        }
+        .form-panel.collapsed {
+            transform: translateX(100%);
+            width: 0; /* 收起时宽度为0 */
+            padding: 0; /* 收起时无内边距 */
+        }
+        .toggle-panel-btn {
+            position: absolute;
+            left: -36px;
+            top: 20px;
+            width: 36px;
+            height: 36px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px 0 0 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: #ef4444;
+            margin-left: 4px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .form-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-cancel {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-save {
+            background-color: #3b82f6;
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            background-color: #2563eb;
+        }
+
+        .empty-tip {
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 内容库页面占位 */
+        .content-library {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部系统名称 -->
+    <div class="header">
+        <div class="system-name">内容中台</div>
+        <div class="user-info"></div>
+    </div>
+
+    <!-- 主布局容器 -->
+    <div class="layout-container">
+        <!-- 左侧导航菜单 -->
+        <div class="sidebar">
+            <div class="nav-menu">
+                <div class="nav-item" data-page="content-library">
+                    <span>📂 内容库</span>
+                </div>
+                <div class="nav-item active" data-page="tag-management">
+                    <span>🏷️ 标签管理</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content-area">
+            <!-- 内容库页面（默认隐藏） -->
+            <div class="content-library hidden" id="contentLibraryPage">
+                内容库功能开发中...
+            </div>
+
+            <!-- 标签管理页面 -->
+            <div id="tagManagementPage">
+                <!-- 顶部组件栏 -->
+                <div class="top-bar">
+                    <div class="top-left">
+                        <div class="component-btn category" draggable="true" data-type="category">
+                            <span>标签分类</span>
+                        </div>
+                        <div class="component-btn tag" draggable="true" data-type="tag">
+                            <span>叶子标签</span>
+                        </div>
+                        <!-- 画布控制器移到这里 -->
+                        <div class="canvas-controls">
+                            <button class="canvas-btn" id="zoomIn" title="放大">+</button>
+                            <button class="canvas-btn" id="zoomOut" title="缩小">−</button>
+                            <button class="canvas-btn" id="zoomReset" title="重置1:1">1:1</button>
+                            <button class="canvas-btn" id="zoomFit" title="适应屏幕">⊡</button>
+                            <button class="canvas-btn" id="fullscreen" title="全屏">⛶</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主容器 -->
+                <div class="main-container">
+                    <!-- 画布区域 -->
+                    <div class="canvas-area">
+                        <div class="canvas-wrapper" id="canvasWrapper">
+                            <div class="canvas-content" id="canvasContent">
+                                <svg id="connections" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+                                <div id="canvas"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧表单面板 -->
+                    <div class="form-panel" id="formPanel">
+                        <button class="toggle-panel-btn" id="togglePanel">«</button>
+                        <div class="empty-tip">请在画布中选择一个节点，编辑标签信息</div>
+                        
+                        <!-- 标签分类表单 -->
+                        <div id="categoryForm" class="hidden">
+                            <div class="form-title">标签分类配置</div>
+                            <div class="form-group">
+                                <label class="form-label required">分类名称</label>
+                                <input type="text" class="form-input" id="categoryName" placeholder="请输入分类名称">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">父分类</label>
+                                <select class="form-select" id="parentCategory">
+                                    <option value="root">根目录</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">是否是末级分类</label>
+                                <div class="radio-group">
+                                    <div class="radio-item">
+                                        <input type="radio" name="isLeaf" id="isLeafNo" value="0">
+                                        <label for="isLeafNo">否</label>
+                                    </div>
+                                    <div class="radio-item">
+                                        <input type="radio" name="isLeaf" id="isLeafYes" value="1" checked>
+                                        <label for="isLeafYes">是</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 打标规则 - 仅末级分类显示 -->
+                            <div class="form-group" id="tagRuleGroup">
+                                <label class="form-label required">打标规则</label>
+                                <select class="form-select" id="tagRule">
+                                    <option value="single">单选、必填</option>
+                                    <option value="multiple">多选、可选</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-cancel">取消</button>
+                                <button class="btn btn-save">保存</button>
+                            </div>
+                        </div>
+
+                        <!-- 叶子标签表单 - 保留是否AI打标，移除AI打标规则输入框 -->
+                        <div id="tagForm" class="hidden">
+                            <div class="form-title">叶子标签配置</div>
+                            <div class="form-group">
+                                <label class="form-label required">标签名称</label>
+                                <input type="text" class="form-input" id="tagName" placeholder="请输入标签名称">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">归属末级分类</label>
+                                <select class="form-select" id="belongCategory">
+                                    <option value="">请选择末级分类</option>
+                                </select>
+                            </div>
+                            <!-- 保留是否AI打标选项 -->
+                            <div class="form-group">
+                                <label class="form-label required">是否AI打标</label>
+                                <div class="radio-group">
+                                    <div class="radio-item">
+                                        <input type="radio" name="isAiTag" id="isAiTagYes" value="1" checked>
+                                        <label for="isAiTagYes">是</label>
+                                    </div>
+                                    <div class="radio-item">
+                                        <input type="radio" name="isAiTag" id="isAiTagNo" value="0">
+                                        <label for="isAiTagNo">否</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 移除了AI打标规则输入框 -->
+                            <div class="form-group">
+                                <label class="form-label">标签描述（非必填）</label>
+                                <textarea class="form-textarea" id="tagDesc" placeholder="请输入标签描述"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-cancel">取消</button>
+                                <button class="btn btn-save">保存</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态
+        let nodes = [];
+        let selectedNode = null;
+        let connectingNode = null; // 连线模式节点
+        let nodeIdCounter = 0;
+        let scale = 1;
+        const minScale = 0.5;
+        const maxScale = 2;
+        const scaleStep = 0.1;
+
+        // DOM 元素
+        const canvas = document.getElementById('canvas');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        const canvasContent = document.getElementById('canvasContent');
+        const connectionsSvg = document.getElementById('connections');
+        const formPanel = document.getElementById('formPanel');
+        const emptyTip = document.querySelector('.empty-tip');
+        const categoryForm = document.getElementById('categoryForm');
+        const tagForm = document.getElementById('tagForm');
+        const componentBtns = document.querySelectorAll('.component-btn');
+        const togglePanel = document.getElementById('togglePanel');
+        
+        // 新增DOM元素
+        const navItems = document.querySelectorAll('.nav-item');
+        const contentLibraryPage = document.getElementById('contentLibraryPage');
+        const tagManagementPage = document.getElementById('tagManagementPage');
+        const isLeafRadios = document.querySelectorAll('input[name="isLeaf"]');
+        const tagRuleGroup = document.getElementById('tagRuleGroup');
+        // 新增：是否AI打标单选框
+        const isAiTagRadios = document.querySelectorAll('input[name="isAiTag"]');
+
+        // ==================== 1. 左侧导航菜单和顶部系统名称 ====================
+        // 导航菜单切换
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // 移除所有active状态
+                navItems.forEach(nav => nav.classList.remove('active'));
+                // 添加当前active状态
+                item.classList.add('active');
+                
+                const page = item.dataset.page;
+                if (page === 'content-library') {
+                    contentLibraryPage.classList.remove('hidden');
+                    tagManagementPage.classList.add('hidden');
+                } else if (page === 'tag-management') {
+                    contentLibraryPage.classList.add('hidden');
+                    tagManagementPage.classList.remove('hidden');
+                }
+            });
+        });
+
+        // ==================== 2. 标签分类表单 - 末级分类控制打标规则显示 ====================
+        isLeafRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                // 选择"是"显示打标规则，选择"否"隐藏
+                if (radio.value === '1') {
+                    tagRuleGroup.classList.remove('hidden');
+                } else {
+                    tagRuleGroup.classList.add('hidden');
+                }
+            });
+        });
+
+        // ==================== 3. 开关联动 - 上级关闭自动关闭所有下级 ====================
+        // 递归关闭所有子节点
+        function disableChildNodes(parentId) {
+            // 找到所有直接子节点
+            const childNodes = nodes.filter(node => node.parentId === parentId);
+            
+            childNodes.forEach(child => {
+                // 关闭当前子节点
+                child.enabled = false;
+                const childEl = document.getElementById(child.id);
+                if (childEl) {
+                    const toggle = childEl.querySelector('.toggle-switch');
+                    toggle.classList.remove('active');
+                }
+                
+                // 递归关闭子节点的子节点
+                disableChildNodes(child.id);
+            });
+        }
+
+        // ==================== 4. 修复连线功能 BUG - 核心修改 ====================
+        // 开始连线
+        function startConnect(nodeId) {
+            connectingNode = nodes.find(n => n.id === nodeId);
+            document.querySelectorAll('.node-card').forEach(el => {
+                el.classList.remove('connecting');
+            });
+            document.getElementById(nodeId).classList.add('connecting');
+        }
+
+        // 建立父子连线 - 修复：一个子节点只能有一个父节点
+        function buildConnection(parentId) {
+            if (!connectingNode || connectingNode.id === parentId) return;
+            
+            // 核心修复：先移除该子节点之前的父节点关联
+            // 找到所有以当前节点为父节点的节点（清空反向关联）
+            nodes.forEach(node => {
+                if (node.parentId === connectingNode.id) {
+                    node.parentId = null;
+                }
+            });
+            
+            // 设置当前节点的父节点（一个子节点只能有一个父节点）
+            connectingNode.parentId = parentId;
+            
+            connectingNode = null;
+            document.querySelectorAll('.node-card').forEach(el => {
+                el.classList.remove('connecting');
+            });
+            updateConnections(); // 重新渲染所有连线
+            updateParentOptions();
+        }
+
+        // ==================== 5. 面板收起/展开 - 关键修改：配合样式调整 ====================
+        togglePanel.addEventListener('click', () => {
+            formPanel.classList.toggle('collapsed');
+            togglePanel.textContent = formPanel.classList.contains('collapsed') ? '»' : '«';
+            // 触发画布重绘，确保占满宽度
+            canvasContent.style.width = formPanel.classList.contains('collapsed') ? '100%' : 'calc(100% - 360px)';
+        });
+
+        // 点击画布空白区收起面板
+        canvasWrapper.addEventListener('click', (e) => {
+            if (e.target === canvasWrapper || e.target === canvasContent || e.target === canvas) {
+                collapsePanel();
+                clearSelection();
+            }
+        });
+
+        function collapsePanel() {
+            formPanel.classList.add('collapsed');
+            togglePanel.textContent = '»';
+            canvasContent.style.width = '100%'; // 画布占满宽度
+        }
+        function expandPanel() {
+            formPanel.classList.remove('collapsed');
+            togglePanel.textContent = '«';
+            canvasContent.style.width = 'calc(100% - 360px)'; // 画布留出表单宽度
+        }
+
+        // ==================== 6. 画布缩放控制 - 修复底部遮挡问题 ====================
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            scale = Math.min(maxScale, scale + scaleStep);
+            updateCanvasScale();
+        });
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            scale = Math.max(minScale, scale - scaleStep);
+            updateCanvasScale();
+        });
+        document.getElementById('zoomReset').addEventListener('click', () => {
+            scale = 1;
+            updateCanvasScale();
+        });
+        document.getElementById('zoomFit').addEventListener('click', () => {
+            if (nodes.length === 0) {
+                scale = 1;
+                updateCanvasScale();
+                return;
+            }
+            
+            // 计算所有节点的边界 - 修复底部计算
+            let minX = Infinity, minY = Infinity;
+            let maxX = -Infinity, maxY = -Infinity;
+            
+            nodes.forEach(node => {
+                minX = Math.min(minX, node.x);
+                minY = Math.min(minY, node.y);
+                maxX = Math.max(maxX, node.x + 140);
+                maxY = Math.max(maxY, node.y + 36);
+            });
+            
+            // 计算适应屏幕的缩放比例
+            const canvasWidth = canvasWrapper.clientWidth;
+            const canvasHeight = canvasWrapper.clientHeight;
+            const contentWidth = maxX - minX;
+            const contentHeight = maxY - minY;
+            
+            const scaleX = (canvasWidth * 0.9) / contentWidth;
+            const scaleY = (canvasHeight * 0.9) / contentHeight;
+            scale = Math.min(scaleX, scaleY, maxScale);
+            
+            updateCanvasScale();
+            
+            // 滚动到中心位置 - 修复底部滚动
+            canvasWrapper.scrollLeft = (contentWidth * scale - canvasWidth) / 2 + minX * scale;
+            canvasWrapper.scrollTop = (contentHeight * scale - canvasHeight) / 2 + minY * scale;
+            
+            // 确保底部有足够滚动空间
+            canvasWrapper.style.height = '100%';
+            canvasContent.style.minHeight = `${maxY + 50}px`; // 底部额外空间
+        });
+
+        document.getElementById('fullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error('全屏请求失败:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        function updateCanvasScale() {
+            canvasContent.style.transform = `scale(${scale})`;
+            // 修复缩放后底部遮挡
+            canvasContent.style.minHeight = `${canvasWrapper.clientHeight / scale + 100}px`;
+        }
+
+        // ==================== 7. 原有功能增强 ====================
+        // 拖拽创建节点
+        componentBtns.forEach(btn => {
+            btn.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('nodeType', btn.dataset.type);
+            });
+        });
+
+        canvasWrapper.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        canvasWrapper.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('nodeType');
+            if (!type) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / scale - 70;
+            const y = (e.clientY - rect.top) / scale - 18;
+
+            createNode(type, x, y);
+        });
+
+        // 创建节点 - 保留isAiTag属性（移除aiTagRule）
+        function createNode(type, x, y) {
+            const id = `node_${++nodeIdCounter}`;
+            const nodeData = {
+                id,
+                type,
+                name: type === 'category' ? '新分类' : '新标签',
+                x,
+                y,
+                enabled: true,
+                parentId: null,
+                isLeaf: type === 'category' ? true : null,
+                isAiTag: type === 'tag' ? true : null // 保留是否AI打标属性
+            };
+            nodes.push(nodeData);
+
+            const nodeEl = document.createElement('div');
+            nodeEl.className = `node-card ${type}`;
+            nodeEl.id = id;
+            nodeEl.style.left = `${x}px`;
+            nodeEl.style.top = `${y}px`;
+            nodeEl.innerHTML = `
+                <div class="node-name">${nodeData.name}</div>
+                <div class="toggle-switch ${nodeData.enabled ? 'active' : ''}"></div>
+            `;
+            canvas.appendChild(nodeEl);
+
+            makeDraggable(nodeEl, nodeData);
+
+            // 点击事件：选中 / 连线二合一
+            nodeEl.addEventListener('click', (e) => {
+                if (e.target.classList.contains('toggle-switch')) return;
+                
+                if (connectingNode) {
+                    // 连线模式：建立连接
+                    buildConnection(id);
+                } else {
+                    // 普通模式：选中节点
+                    selectNode(id);
+                    expandPanel();
+                }
+            });
+
+            // 双击开始连线
+            nodeEl.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                if (e.target.classList.contains('toggle-switch')) return;
+                startConnect(id);
+                expandPanel();
+            });
+
+            // 右键取消当前节点的父节点
+            nodeEl.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                nodeData.parentId = null;
+                updateConnections();
+                updateParentOptions();
+            });
+
+            // 开关 - 新增联动逻辑
+            const toggle = nodeEl.querySelector('.toggle-switch');
+            toggle.addEventListener('click', () => {
+                nodeData.enabled = !nodeData.enabled;
+                toggle.classList.toggle('active', nodeData.enabled);
+                
+                // 如果关闭当前节点，自动关闭所有下级节点
+                if (!nodeData.enabled) {
+                    disableChildNodes(nodeData.id);
+                }
+            });
+
+            selectNode(id);
+            expandPanel();
+        }
+
+        // 节点拖拽 - 修复底部拖拽问题
+        function makeDraggable(el, nodeData) {
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+
+            el.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                if (e.target.classList.contains('toggle-switch') || connectingNode) return;
+                
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = nodeData.x;
+                startTop = nodeData.y;
+                el.style.zIndex = 1000;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = (e.clientX - startX) / scale;
+                const dy = (e.clientY - startY) / scale;
+                nodeData.x = Math.max(0, startLeft + dx);
+                nodeData.y = Math.max(0, startTop + dy); // 允许y轴足够大，不限制底部
+                el.style.left = `${nodeData.x}px`;
+                el.style.top = `${nodeData.y}px`;
+                updateConnections();
+                
+                // 确保画布内容高度足够显示底部节点
+                canvasContent.style.minHeight = `${Math.max(canvasContent.clientHeight, nodeData.y + 100)}px`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                el.style.zIndex = '';
+            });
+        }
+
+        // 选中节点 - 保留是否AI打标逻辑（移除AI打标规则）
+        function selectNode(id) {
+            clearSelection();
+            selectedNode = nodes.find(n => n.id === id);
+            const nodeEl = document.getElementById(id);
+            nodeEl.classList.add('selected');
+
+            emptyTip.classList.add('hidden');
+            categoryForm.classList.add('hidden');
+            tagForm.classList.add('hidden');
+
+            if (selectedNode.type === 'category') {
+                categoryForm.classList.remove('hidden');
+                document.getElementById('categoryName').value = selectedNode.name;
+                // 设置父分类下拉框选中值
+                document.getElementById('parentCategory').value = selectedNode.parentId || 'root';
+                
+                // 设置是否末级分类单选框
+                if (selectedNode.isLeaf !== null) {
+                    document.getElementById(selectedNode.isLeaf ? 'isLeafYes' : 'isLeafNo').checked = true;
+                    // 同步显示/隐藏打标规则
+                    if (selectedNode.isLeaf) {
+                        tagRuleGroup.classList.remove('hidden');
+                    } else {
+                        tagRuleGroup.classList.add('hidden');
+                    }
+                }
+            } else {
+                tagForm.classList.remove('hidden');
+                document.getElementById('tagName').value = selectedNode.name;
+                // 设置归属分类下拉框选中值
+                document.getElementById('belongCategory').value = selectedNode.parentId || '';
+                document.getElementById('tagDesc').value = selectedNode.tagDesc || '';
+                
+                // 设置是否AI打标单选框
+                if (selectedNode.isAiTag !== null) {
+                    document.getElementById(selectedNode.isAiTag ? 'isAiTagYes' : 'isAiTagNo').checked = true;
+                }
+            }
+
+            updateParentOptions();
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.node-card.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            selectedNode = null;
+            connectingNode = null;
+            document.querySelectorAll('.node-card.connecting').forEach(el => {
+                el.classList.remove('connecting');
+            });
+            
+            emptyTip.classList.remove('hidden');
+            categoryForm.classList.add('hidden');
+            tagForm.classList.add('hidden');
+        }
+
+        // 更新连接线 - 核心修改：添加单向箭头，修复连线逻辑
+        function updateConnections() {
+            connectionsSvg.innerHTML = ''; // 清空现有连线
+            
+            // 1. 定义箭头标记（只需要定义一次）
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('viewBox', '0 0 10 10');
+            marker.setAttribute('refX', '9'); // 箭头位置（靠近线段末端）
+            marker.setAttribute('refY', '5');
+            marker.setAttribute('markerWidth', '6');
+            marker.setAttribute('markerHeight', '6');
+            marker.setAttribute('orient', 'auto'); // 自动旋转箭头方向
+            
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 5, 0 10');
+            polygon.setAttribute('class', 'arrow-head');
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            connectionsSvg.appendChild(defs);
+            
+            // 2. 遍历所有节点，为每个有父节点的节点创建连线
+            nodes.forEach(node => {
+                if (node.parentId && node.parentId !== 'root') {
+                    const parent = nodes.find(n => n.id === node.parentId);
+                    if (parent) {
+                        // 计算连线起点（父节点中心）和终点（子节点中心）
+                        const x1 = parent.x + 70; // 父节点水平中心
+                        const y1 = parent.y + 18; // 父节点垂直中心
+                        const x2 = node.x + 70;   // 子节点水平中心
+                        const y2 = node.y + 18;   // 子节点垂直中心
+
+                        // 创建贝塞尔曲线连线（父→子）
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        const midX = (x1 + x2) / 2;
+                        path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+                        path.setAttribute('class', 'connection-line');
+                        // 添加箭头标记（指向子节点）
+                        path.setAttribute('marker-end', 'url(#arrowhead)');
+                        connectionsSvg.appendChild(path);
+                    }
+                }
+            });
+        }
+
+        // 更新父分类下拉
+        function updateParentOptions() {
+            const parentSelect = document.getElementById('parentCategory');
+            const belongSelect = document.getElementById('belongCategory');
+            
+            // 保存当前选中值
+            const parentSelectedValue = parentSelect.value;
+            const belongSelectedValue = belongSelect.value;
+            
+            // 重新构建下拉选项
+            parentSelect.innerHTML = '<option value="root">根目录</option>';
+            belongSelect.innerHTML = '<option value="">请选择末级分类</option>';
+
+            nodes.forEach(node => {
+                if (node.type === 'category' && (!selectedNode || node.id !== selectedNode.id)) {
+                    // 分类父节点下拉（排除自己）
+                    const opt1 = document.createElement('option');
+                    opt1.value = node.id;
+                    opt1.textContent = node.name;
+                    parentSelect.appendChild(opt1);
+
+                    // 标签归属分类下拉 - 只显示末级分类
+                    if (node.isLeaf) {
+                        const opt2 = document.createElement('option');
+                        opt2.value = node.id;
+                        opt2.textContent = node.name;
+                        belongSelect.appendChild(opt2);
+                    }
+                }
+            });
+
+            // 恢复选中值
+            if (parentSelectedValue) {
+                parentSelect.value = parentSelectedValue;
+            }
+            if (belongSelectedValue) {
+                belongSelect.value = belongSelectedValue;
+            }
+        }
+
+        // 保存 - 保留是否AI打标逻辑（移除AI打标规则）
+        document.querySelectorAll('.btn-save').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!selectedNode) return;
+                
+                if (selectedNode.type === 'category') {
+                    const name = document.getElementById('categoryName').value.trim();
+                    const parentId = document.getElementById('parentCategory').value;
+                    const isLeaf = document.querySelector('input[name="isLeaf"]:checked').value === '1';
+                    
+                    if (name) {
+                        selectedNode.name = name;
+                        document.getElementById(selectedNode.id).querySelector('.node-name').textContent = name;
+                    }
+                    
+                    // 更新父节点
+                    selectedNode.parentId = parentId === 'root' ? null : parentId;
+                    // 保存是否末级分类状态
+                    selectedNode.isLeaf = isLeaf;
+                } else {
+                    const name = document.getElementById('tagName').value.trim();
+                    const parentId = document.getElementById('belongCategory').value;
+                    const tagDesc = document.getElementById('tagDesc').value.trim();
+                    // 保存是否AI打标状态
+                    const isAiTag = document.querySelector('input[name="isAiTag"]:checked').value === '1';
+                    
+                    if (name) {
+                        selectedNode.name = name;
+                        document.getElementById(selectedNode.id).querySelector('.node-name').textContent = name;
+                    }
+                    
+                    // 更新父节点
+                    selectedNode.parentId = parentId || null;
+                    selectedNode.tagDesc = tagDesc;
+                    // 保存是否AI打标
+                    selectedNode.isAiTag = isAiTag;
+                }
+                
+                updateConnections();
+                updateParentOptions();
+                alert('保存成功');
+            });
+        });
+
+        // 取消
+        document.querySelectorAll('.btn-cancel').forEach(btn => {
+            btn.addEventListener('click', () => {
+                collapsePanel();
+                clearSelection();
+            });
+        });
+
+        // 画布拖动 - 修复底部滚动问题
+        let isPanning = false;
+        let panStartX, panStartY;
+        canvasWrapper.addEventListener('mousedown', (e) => {
+            if (e.target !== canvasWrapper && e.target !== canvasContent) return;
+            isPanning = true;
+            panStartX = canvasWrapper.scrollLeft + e.clientX;
+            panStartY = canvasWrapper.scrollTop + e.clientY;
+        });
+        canvasWrapper.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            canvasWrapper.scrollLeft = panStartX - e.clientX;
+            canvasWrapper.scrollTop = panStartY - e.clientY;
+        });
+        canvasWrapper.addEventListener('mouseup', () => {
+            isPanning = false;
+        });
+
+        // 初始化 - 确保画布占满宽度
+        window.addEventListener('load', () => {
+            canvasContent.style.width = formPanel.classList.contains('collapsed') ? '100%' : 'calc(100% - 360px)';
+            canvasContent.style.minHeight = '1000px'; // 初始高度足够
+        });
+
+        // 全屏变化时更新缩放
+        document.addEventListener('fullscreenchange', () => {
+            updateCanvasScale();
+        });
+    </script>
+</body>
+</html>
