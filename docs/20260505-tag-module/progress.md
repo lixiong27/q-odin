@@ -30,52 +30,61 @@
 |------|------|------|
 | tag_category 表 | ✅ 完成 | 标签分类表 |
 | tag_leaf 表 | ✅ 完成 | 叶子标签表 |
-| 建表脚本 | ❌ 待开始 | SQL 文件 |
+| 建表脚本 | ✅ 完成 | `odin_server/docs/sql/tag_schema.sql` |
 
 ### 阶段三：后端开发
 
 | 任务 | 状态 | 说明 |
 |------|------|------|
-| Entity 实体类 | ❌ 待开始 | TagCategory, TagLeaf |
-| Mapper 接口 | ❌ 待开始 | MyBatis Mapper |
-| Service 服务层 | ❌ 待开始 | 标签分类、叶子标签服务 |
-| Controller 控制层 | ❌ 待开始 | REST API |
-| 打标规则校验 | ❌ 待开始 | 单选/多选规则 |
+| Entity 实体类 | ✅ 完成 | TagCategory, TagLeaf, 请求对象 |
+| Mapper 接口 | ✅ 完成 | TagCategoryMapper, TagLeafMapper |
+| Service 服务层 | ✅ 完成 | TagCategoryService, TagLeafService |
+| Controller 控制层 | ✅ 完成 | TagCategoryController, TagLeafController |
+| 打标规则校验 | ⏳ 暂缓 | 单选/多选规则 |
 
 ### 阶段四：前端开发
 
 | 任务 | 状态 | 说明 |
 |------|------|------|
 | 标签树可视化 | ✅ 完成 | 思维导图组件（拖拽关联） |
-| 分类管理页面 | ❌ 待开始 | 分类 CRUD |
-| 标签管理页面 | ❌ 待开始 | 标签 CRUD |
+| 分类管理页面 | ✅ 完成 | `src/pages/tag/category.jsx` |
+| 标签管理页面 | ✅ 完成 | `src/pages/tag/list.jsx` |
 | 表单联动逻辑 | ✅ 完成 | 末级分类/打标规则/AI打标 |
+| API 封装 | ✅ 完成 | `src/api/tag.js` |
+| 路由配置 | ✅ 完成 | config/config.js |
 
 ### 阶段五：联调测试
 
 | 任务 | 状态 | 说明 |
 |------|------|------|
-| 接口联调 | ❌ 待开始 | - |
-| 功能测试 | ❌ 待开始 | - |
+| 后端编译 | ✅ 完成 | mvn compile 成功 |
+| 前端编译 | ✅ 完成 | umi build 成功 |
+| 接口联调 | ❌ 待开始 | 需启动服务 |
+| 功能测试 | ❌ 待开始 | 需启动服务 |
 
 ---
 
 ## 当前进度
 
-**当前阶段：** 阶段二 - 数据库设计（准备开始）
+**当前阶段：** 阶段五 - 联调测试（准备开始）
 
 **已完成：**
 - 阅读设计文档 initial.md
 - 分析原型 标签管理-思维导图版.html
 - 输出设计文档 design.md
-- 补充关联表设计（content_tag_rel, content_tag_history, tag_operation_log）
+- 建表脚本 SQL 文件
+- 后端 Entity/Mapper/Service/Controller 全部完成
+- 前端 API/页面/路由全部完成
+- 后端编译验证通过
+- 前端编译验证通过
 
 **待确认：**
-- 建表脚本DDL细节（索引策略、分区策略）
-- 是否需要标签转换日志表（tag_convert_log）
+- 数据库表是否已创建
 
 **下一步：**
-- 编写建表脚本 SQL 文件
+- 启动后端服务
+- 启动前端开发服务
+- 进行接口联调测试
 
 ---
 
