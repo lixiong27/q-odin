@@ -21,7 +21,8 @@
 | 文档阅读 | ✅ 完成 | initial.md 已分析 |
 | 原型分析 | ✅ 完成 | 标签管理-思维导图版.html |
 | 设计文档整理 | ✅ 完成 | design.md 已输出 |
-| 需求确认 | ⏳ 进行中 | 待用户确认实现方案 |
+| 关联表设计 | ✅ 完成 | content_tag_rel, history, operation_log |
+| 需求确认 | ✅ 完成 | 设计文档已完善 |
 
 ### 阶段二：数据库设计
 
@@ -29,7 +30,9 @@
 |------|------|------|
 | tag_category 表 | ✅ 完成 | 标签分类表 |
 | tag_leaf 表 | ✅ 完成 | 叶子标签表 |
-| content_tag_rel 表 | ❌ 待开始 | 内容标签关联表 |
+| content_tag_rel 表 | ✅ 完成 | 内容标签关联表 |
+| content_tag_history 表 | ✅ 完成 | 打标历史表 |
+| tag_operation_log 表 | ✅ 完成 | 操作日志表 |
 | 建表脚本 | ❌ 待开始 | SQL 文件 |
 
 ### 阶段三：后端开发
@@ -62,20 +65,20 @@
 
 ## 当前进度
 
-**当前阶段：** 阶段一 - 需求分析（接近完成）
+**当前阶段：** 阶段二 - 数据库设计（准备开始）
 
 **已完成：**
 - 阅读设计文档 initial.md
 - 分析原型 标签管理-思维导图版.html
 - 输出设计文档 design.md
+- 补充关联表设计（content_tag_rel, content_tag_history, tag_operation_log）
 
 **待确认：**
-- 内容标签关联表（content_tag_rel）结构
-- 打标历史表（content_tag_history）是否需要
-- 操作日志表（tag_operation_log）结构
+- 建表脚本DDL细节（索引策略、分区策略）
+- 是否需要标签转换日志表（tag_convert_log）
 
 **下一步：**
-- 用户确认需求后，开始数据库建表脚本编写
+- 编写建表脚本 SQL 文件
 
 ---
 
