@@ -86,7 +86,7 @@ q-odin/
 
 ## 当前进度
 
-**当前阶段：** 阶段一 - 项目初始化
+**当前阶段：** 阶段二 - 工具类开发（已完成）
 
 **已完成：**
 - CLAUDE.md + infra.md 文档初始化
@@ -99,12 +99,19 @@ q-odin/
 - 4 个环境 profiles 初始化（local/betanoah/prod/simulation，各 6 个配置文件）
 - 前端项目骨架（package.json + config.js + 布局 + health 页面）
 - 移除 mkt_odin_server_web-api 模块
+- 视频处理工具类（VideoUtil + HttpUtils.downloadVideo）
+  - 视频流式下载（支持大文件）
+  - 视频抽帧（可配置间隔和最大帧数）
+  - 音频提取（MP3 格式）
+  - 视频信息获取（FFprobe）
+  - 临时目录清理
+- 功能验证通过（测试视频 45.79s, 4.84MB）
 
 **待开始：**
 
 **下一步：**
-1. 后端 mvn compile 验证编译通过
-2. 根据具体业务需求开始开发
+1. 根据具体业务需求继续开发
+2. 集成视频工具类到业务服务
 
 ---
 
