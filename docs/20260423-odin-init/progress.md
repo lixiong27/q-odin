@@ -72,6 +72,16 @@ q-odin/
 | 后端 Profiles 初始化 | ✅ 完成 | 4 个环境（local/betanoah/prod/simulation）x 6 配置文件 |
 | 前端项目初始化 | ✅ 完成 | UmiJS 3 + React 16 + Ant Design 4 + package.json + config.js |
 
+### 阶段二：工具类开发
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| 视频下载（HttpUtils.downloadVideo） | ✅ 完成 | 流式下载，支持大文件 |
+| 视频抽帧（VideoUtil.extractFrames） | ✅ 完成 | FFmpeg 抽帧，可调间隔和最大帧数 |
+| 音频提取（VideoUtil.extractAudio） | ✅ 完成 | 提取视频音频为 MP3 |
+| 视频信息获取（VideoUtil.getVideoInfo） | ✅ 完成 | 通过 FFprobe 获取视频元信息 |
+| 临时目录清理（VideoUtil.cleanupTempDir） | ✅ 完成 | 使用 commons-io 清理 |
+
 ---
 
 ## 当前进度
