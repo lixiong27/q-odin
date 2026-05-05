@@ -66,59 +66,14 @@
 - `category_id` 必须关联 `is_leaf=1` 的分类
 - 停用标签禁止用于新内容打标，已打标内容保留
 
-#### 内容标签关联表 (content_tag_rel)
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT | 主键，自增 |
-| content_id | BIGINT | 内容ID |
-| tag_id | BIGINT | 标签ID |
-| create_time | DATETIME | 创建时间 |
-| create_by | VARCHAR(64) | 创建人 |
-| valid | TINYINT | 软删标记 |
-
-**核心约束：**
-- `content_id` + `tag_id` 唯一
-- 打标时校验标签状态（status=1）
-
-#### 打标历史表 (content_tag_history)
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT | 主键，自增 |
-| content_id | BIGINT | 内容ID |
-| old_tag_ids | VARCHAR(1000) | 原标签ID列表 |
-| new_tag_ids | VARCHAR(1000) | 新标签ID列表 |
-| operation_type | VARCHAR(20) | 操作类型：ADD/REMOVE/REPLACE |
-| create_time | DATETIME | 创建时间 |
-| create_by | VARCHAR(64) | 操作人 |
-
-**用途：** 记录内容打标变更历史，用于审计追溯
-
-#### 操作日志表 (tag_operation_log)
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT | 主键，自增 |
-| operation_type | VARCHAR(50) | 操作类型：CREATE/UPDATE/DELETE/DISABLE |
-| target_type | VARCHAR(20) | 目标类型：CATEGORY/TAG |
-| target_id | BIGINT | 目标ID |
-| before_data | TEXT | 变更前数据（JSON） |
-| after_data | TEXT | 变更后数据（JSON） |
-| remark | VARCHAR(500) | 备注说明 |
-| create_time | DATETIME | 创建时间 |
-| create_by | VARCHAR(64) | 操作人 |
-
-**用途：** 记录分类/标签的所有操作变更
-
 ### 2.2 ER 关系
 
 ```
 tag_category (1) ←→ (N) tag_category  -- 自关联父子关系
 tag_category (1) ←→ (N) tag_leaf       -- 末级分类关联叶子标签
-tag_leaf (N) ←→ (N) content            -- 通过 content_tag_rel 关联
-tag_leaf (1) ←→ (N) content_tag_history -- 标签变更历史
 ```
+
+> **注：** 内容标签关联表（content_tag_rel）、打标历史表、操作日志表暂不实现，后续按需添加。
 
 ---
 

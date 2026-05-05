@@ -30,9 +30,6 @@
 |------|------|------|
 | tag_category 表 | ✅ 完成 | 标签分类表 |
 | tag_leaf 表 | ✅ 完成 | 叶子标签表 |
-| content_tag_rel 表 | ✅ 完成 | 内容标签关联表 |
-| content_tag_history 表 | ✅ 完成 | 打标历史表 |
-| tag_operation_log 表 | ✅ 完成 | 操作日志表 |
 | 建表脚本 | ❌ 待开始 | SQL 文件 |
 
 ### 阶段三：后端开发
