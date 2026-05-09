@@ -7,6 +7,8 @@
 **输入**：实体对象列表
 **输出**：操作结果
 
+**参考项目**：poseidon-superman
+
 ---
 
 ## 二、技术方案
@@ -24,6 +26,12 @@
     <groupId>org.elasticsearch</groupId>
     <artifactId>elasticsearch</artifactId>
     <version>7.10.2</version>
+</dependency>
+<!-- Gson -->
+<dependency>
+    <groupId>com.google.code.gson</groupId>
+    <artifactId>gson</artifactId>
+    <version>2.8.9</version>
 </dependency>
 ```
 
@@ -77,8 +85,8 @@
     ▼
 ┌──────────────────┐
 │ 3. 构建 BulkRequest│
-│    - 生成文档ID   │
-│    - 序列化为JSON │
+│    - Gson序列化   │
+│    - 无文档ID     │
 └──────────────────┘
     │
     ▼
@@ -100,23 +108,23 @@
 
 ```
 odin_server/mkt_odin_server_web/src/main/java/com/qunar/ug/flight/contact/odin/server/
-├── config/
-│   └── ElasticsearchConfig.java           # ES Client 配置
 ├── infra/
+│   ├── config/
+│   │   └── ElasticsearchConfig.java        # ES Client 配置
 │   └── elasticsearch/
-│       └── ElasticsearchDataSource.java   # ES 通用操作封装
+│       └── ElasticsearchDataSource.java    # ES 通用操作封装
 ├── service/
 │   └── es/
-│       └── EsDemoService.java             # Demo 服务
+│       └── EsDemoService.java              # Demo 服务
 ├── domain/
 │   ├── entity/es/
-│   │   └── DemoEntity.java                # Demo 实体
+│   │   └── DemoEntity.java                 # Demo 实体
 │   ├── request/es/
-│   │   └── EsBatchInsertRequest.java      # 批量插入请求
+│   │   └── EsBatchInsertRequest.java       # 批量插入请求
 │   └── response/es/
-│       └── EsBatchInsertResponse.java     # 批量插入响应
+│       └── EsBatchInsertResponse.java      # 批量插入响应
 └── web/
-    └── EsDemoController.java              # Demo 控制器
+    └── EsDemoController.java               # Demo 控制器
 ```
 
 ### 3.2 配置项 (hotfile.properties)
@@ -137,185 +145,92 @@ es.index.replicas=1
 
 #### 3.3.1 ElasticsearchConfig.java
 
+参考 superman `ElasticsearchRestClientConfigurations` 实现：
+
+- 使用 `RestClientBuilderCustomizer` 扩展配置
+- 使用 `ElasticsearchRestClientProperties` 读取配置
+- 添加失败监听器
+
 ```java
-package com.qunar.ug.flight.contact.odin.server.infra.config;
-
-import com.qunar.ug.flight.contact.odin.server.infra.qconfig.HotFileQConfig;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.Resource;
-import java.net.URI;
-
-/**
- * ES 配置类
- */
-@Slf4j
 @Configuration
 public class ElasticsearchConfig {
 
-    @Resource
-    private HotFileQConfig hotFileQConfig;
+    @Bean
+    public RestClientBuilderCustomizer selfRestClientBuilderCustomizer() {
+        return new RestClientBuilderCustomizer() {
+            @Override
+            public void customize(RestClientBuilder builder) {
+                builder.setFailureListener(new RestClient.FailureListener() {
+                    @Override
+                    public void onFailure(Node node) {
+                        log.warn("ES 节点发生异常 node={}", node);
+                        QMonitor.recordOne("es_node_error_" + node.getHost().getHostName());
+                    }
+                });
+            }
+        };
+    }
 
     @Bean
-    public RestHighLevelClient restHighLevelClient() {
-        String uris = hotFileQConfig.getString("spring.elasticsearch.rest.uris", "http://localhost:9200");
-        String username = hotFileQConfig.getString("spring.elasticsearch.rest.username", "");
-        String password = hotFileQConfig.getString("spring.elasticsearch.rest.password", "");
-
-        URI uri = URI.create(uris);
-        HttpHost httpHost = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
-
-        RestClientBuilder builder = RestClient.builder(httpHost);
-
-        // 配置认证
-        if (!username.isEmpty()) {
-            BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(AuthScope.ANY,
-                    new UsernamePasswordCredentials(username, password));
-
-            builder.setHttpClientConfigCallback(httpClientBuilder ->
-                    httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
-        }
-
-        log.info("Initializing RestHighLevelClient with uri: {}", uris);
-        return new RestHighLevelClient(builder);
+    RestClientBuilder elasticsearchRestClientBuilder(
+            ElasticsearchRestClientProperties properties,
+            ObjectProvider<RestClientBuilderCustomizer> builderCustomizers) {
+        // ...
     }
 }
 ```
 
 #### 3.3.2 ElasticsearchDataSource.java
 
+参考 superman `ElasticsearchDataSourceImpl` 实现：
+
 ```java
-package com.qunar.ug.flight.contact.odin.server.infra.elasticsearch;
-
-import com.qunar.flight.qmonitor.QMonitor;
-import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import java.io.IOException;
-
-/**
- * ES 数据源通用操作
- */
-@Slf4j
 @Component
 public class ElasticsearchDataSource {
+
+    private static final Gson GSON = new Gson();
 
     @Resource
     private RestHighLevelClient restHighLevelClient;
 
-    /**
-     * 检查索引是否存在
-     */
-    public boolean existIndex(String indexName) {
-        try {
-            GetIndexRequest request = new GetIndexRequest(indexName);
-            return restHighLevelClient.indices().exists(request, RequestOptions.DEFAULT);
-        } catch (IOException e) {
-            log.error("检查索引存在失败: {}", indexName, e);
-            return false;
-        }
+    public boolean create(String index, String settings, String mapping) {
+        // 创建索引
     }
 
-    /**
-     * 创建索引
-     */
-    public boolean createIndex(String indexName, String settings, String mappings) {
-        try {
-            CreateIndexRequest request = new CreateIndexRequest(indexName);
+    public boolean existIndex(String index) {
+        // 检查索引是否存在
+    }
 
-            if (settings != null && !settings.isEmpty()) {
-                request.settings(settings, XContentType.JSON);
-            }
-            if (mappings != null && !mappings.isEmpty()) {
-                request.mapping(mappings, XContentType.JSON);
-            }
+    public <T> boolean batchInsert(String index, List<T> dataLists) {
+        // 批量插入，使用 Gson 序列化
+        BulkRequest request = new BulkRequest();
+        transform(index, dataLists).forEach(request::add);
+        // ...
+    }
 
-            CreateIndexResponse response = restHighLevelClient.indices()
-                    .create(request, RequestOptions.DEFAULT);
-            log.info("创建索引成功: {}", indexName);
-            return response.isAcknowledged();
-        } catch (IOException e) {
-            QMonitor.recordOne("es_create_index_error");
-            log.error("创建索引失败: {}", indexName, e);
-            return false;
-        }
+    private <T> List<IndexRequest> transform(String index, List<T> dataLists) {
+        return dataLists.stream()
+                .map(data -> new IndexRequest(index)
+                        .source(GSON.toJson(data), XContentType.JSON))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }
 ```
 
 #### 3.3.3 EsDemoService.java
 
+参考 superman `ErrorLocateService` 实现：
+
 ```java
-package com.qunar.ug.flight.contact.odin.server.service.es;
-
-import com.qunar.flight.qmonitor.QMonitor;
-import com.qunar.ug.flight.contact.odin.server.infra.elasticsearch.ElasticsearchDataSource;
-import com.qunar.ug.flight.contact.odin.server.infra.qconfig.HotFileQConfig;
-import com.qunar.ug.flight.contact.odin.server.infra.util.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-/**
- * ES Demo 服务
- */
-@Slf4j
 @Service
 public class EsDemoService {
 
     @Resource
-    private RestHighLevelClient restHighLevelClient;
-
-    @Resource
     private ElasticsearchDataSource elasticsearchDataSource;
 
-    @Resource
-    private HotFileQConfig hotFileQConfig;
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
-
-    /**
-     * 批量插入数据
-     */
     public void batchInsert(String indexPrefix, List<?> dataList) {
-        if (CollectionUtils.isEmpty(dataList)) {
-            log.info("批量插入数据为空");
-            return;
-        }
-
-        // 按类型分组处理
+        // 按类型分组
         Map<Class<?>, List<?>> groupedData = dataList.stream()
                 .collect(Collectors.groupingBy(Object::getClass));
 
@@ -325,76 +240,9 @@ public class EsDemoService {
     }
 
     private void doBatchInsert(String indexPrefix, List<?> dataList) {
-        // 构建索引名（按日期分片）
-        String indexName = buildIndexName(indexPrefix);
-
-        // 检查并创建索引
-        ensureIndexExists(indexName);
-
-        // 构建批量请求
-        BulkRequest bulkRequest = new BulkRequest();
-        for (Object data : dataList) {
-            if (data == null) {
-                continue;
-            }
-            String id = UUID.randomUUID().toString();
-            String json = JsonUtils.toJson(data);
-            IndexRequest request = new IndexRequest(indexName)
-                    .id(id)
-                    .source(json, XContentType.JSON);
-            bulkRequest.add(request);
-        }
-
-        if (bulkRequest.requests().isEmpty()) {
-            log.warn("批量插入数据为空");
-            return;
-        }
-
-        // 执行批量插入
-        try {
-            BulkResponse response = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-            log.info("批量插入完成, index: {}, size: {}", indexName, dataList.size());
-
-            if (response.hasFailures()) {
-                QMonitor.recordOne("es_batch_insert_fail");
-                log.error("批量插入失败: {}", response.buildFailureMessage());
-            } else {
-                QMonitor.recordMany("es_batch_insert_success", dataList.size(), 0);
-            }
-        } catch (Exception e) {
-            QMonitor.recordOne("es_batch_insert_exception");
-            log.error("批量插入异常", e);
-            throw new RuntimeException("批量插入失败: " + e.getMessage(), e);
-        }
-    }
-
-    private String buildIndexName(String indexPrefix) {
-        String dateSuffix = LocalDate.now().format(DATE_FORMATTER);
-        return indexPrefix + "_" + dateSuffix;
-    }
-
-    private void ensureIndexExists(String indexName) {
-        if (!elasticsearchDataSource.existIndex(indexName)) {
-            String settings = buildDefaultSettings();
-            String mappings = buildDefaultMappings();
-            boolean created = elasticsearchDataSource.createIndex(indexName, settings, mappings);
-            if (!created) {
-                throw new RuntimeException("创建索引失败: " + indexName);
-            }
-        }
-    }
-
-    private String buildDefaultSettings() {
-        int shards = hotFileQConfig.getInt("es.index.shards", 3);
-        int replicas = hotFileQConfig.getInt("es.index.replicas", 1);
-        return String.format("{\"number_of_shards\": %d, \"number_of_replicas\": %d}", shards, replicas);
-    }
-
-    private String buildDefaultMappings() {
-        return "{\"properties\": {" +
-                "\"createTime\": {\"type\": \"date\", \"format\": \"yyyy-MM-dd HH:mm:ss\"}," +
-                "\"updateTime\": {\"type\": \"date\", \"format\": \"yyyy-MM-dd HH:mm:ss\"}" +
-                "}}";
+        String index = buildIndexName(indexPrefix);
+        ensureIndexExists(index);
+        elasticsearchDataSource.batchInsert(index, dataList);
     }
 }
 ```
@@ -405,10 +253,14 @@ public class EsDemoService {
 
 | 指标名 | 说明 |
 |--------|------|
+| es_create_index | 创建索引次数 |
 | es_create_index_error | 创建索引失败次数 |
-| es_batch_insert_success | 批量插入成功次数 |
-| es_batch_insert_fail | 批量插入失败次数 |
-| es_batch_insert_exception | 批量插入异常次数 |
+| es_exist_index_error | 检查索引存在失败次数 |
+| es_batch_insert | 批量插入次数 |
+| es_batch_insert_error | 批量插入异常次数 |
+| es_batch_insert_failure | 批量插入失败次数 |
+| es_demo_batch_insert_success | Demo 批量插入成功次数 |
+| es_demo_batch_insert_fail | Demo 批量插入失败次数 |
 
 ---
 
