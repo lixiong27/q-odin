@@ -51,7 +51,7 @@
 - 单元测试
 - 接口测试
 
-**下一步：** QConfig平台创建 aigc.properties 配置文件
+**下一步：** QConfig平台创建 aigc.properties 配置文件，创建MR合并代码
 
 ---
 
