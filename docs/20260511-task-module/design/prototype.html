@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务模块原型 - ODIN内容中台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.12/antd.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.9/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.12/antd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/zh-cn.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* Layout */
+        .app-layout { min-height: 100vh; }
+        .app-sider {
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%) !important;
+        }
+        .sider-logo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            color: #fff;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sider-logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sider-logo span {
+            margin-left: 12px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        .sider-menu .ant-menu-item-selected {
+            background: rgba(255,255,255,0.1) !important;
+        }
+
+        /* Content */
+        .app-content {
+            padding: 24px;
+            background: #f8fafc;
+            overflow-y: auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+        .page-desc {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* Card */
+        .ant-card {
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .ant-card-head {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .ant-card-head-title {
+            font-weight: 600;
+        }
+
+        /* Table */
+        .ant-table-thead > tr > th {
+            background: #f9fafb;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .ant-table-tbody > tr:hover > td {
+            background: #f9fafb;
+        }
+
+        /* Tag */
+        .ant-tag {
+            border-radius: 20px;
+            padding: 2px 10px;
+        }
+
+        /* Button */
+        .ant-btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            border: none;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+        }
+        .ant-btn-primary:hover {
+            background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Modal */
+        .ant-modal-content {
+            border-radius: 16px;
+        }
+        .ant-modal-header {
+            border-radius: 16px 16px 0 0;
+        }
+
+        /* Form */
+        .ant-form-item-label > label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        /* Progress */
+        .task-progress {
+            margin-bottom: 24px;
+        }
+        .progress-stats {
+            display: flex;
+            gap: 32px;
+            margin-top: 16px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* Steps */
+        .step-card {
+            margin-bottom: 16px;
+        }
+        .step-card .ant-card-body {
+            padding: 16px 24px;
+        }
+
+        /* DataSource Config */
+        .config-section {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .config-section-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #374151;
+        }
+
+        /* SubTask Result */
+        .result-item {
+            padding: 12px 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+        .result-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .result-value {
+            font-size: 14px;
+            color: #111827;
+        }
+
+        /* Tab Navigation */
+        .page-tabs .ant-tabs-nav {
+            margin-bottom: 0 !important;
+        }
+        .page-tabs .ant-tabs-nav::before {
+            display: none;
+        }
+        .page-tabs .ant-tabs-nav-wrap {
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .page-tabs .ant-tabs-tab {
+            flex: 1;
+            justify-content: center;
+            padding: 10px 16px;
+            margin: 0 !important;
+            background: transparent;
+            border-radius: 6px;
+        }
+        .page-tabs .ant-tabs-tab-active {
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .page-tabs .ant-tabs-ink-bar {
+            display: none;
+        }
+
+        /* JSON Preview */
+        .json-preview {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        .json-key { color: #9cdcfe; }
+        .json-string { color: #ce9178; }
+        .json-number { color: #b5cea8; }
+        .json-boolean { color: #569cd6; }
+
+        /* SubTask Steps */
+        .step-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .step-status-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        .step-status-icon.success { background: #10b981; color: #fff; }
+        .step-status-icon.running { background: #6366f1; color: #fff; animation: pulse 1.5s infinite; }
+        .step-status-icon.pending { background: #d1d5db; color: #fff; }
+        .step-status-icon.failed { background: #ef4444; color: #fff; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Material ID Input */
+        .material-id-input .ant-input {
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const {
+            Layout, Menu, Card, Table, Button, Modal, Form, Input, Select, Switch,
+            Tag, Progress, Steps, Descriptions, Space, Popconfirm, message, Tabs,
+            DatePicker, InputNumber, Radio, Checkbox, Divider, Badge, Tooltip,
+            Row, Col, Timeline, Statistic, Alert, Empty, Spin, List
+        } = antd;
+        const { SubMenu } = Menu;
+        const { RangePicker } = DatePicker;
+        const { Option } = Select;
+        const { TextArea } = Input;
+        const Sider = Layout.Sider;
+        const Content = Layout.Content;
+
+        // ==================== Mock Data ====================
+        const mockTasks = [
+            {
+                id: 1,
+                taskCode: 'TASK_20260511_001',
+                taskName: 'AI打标-Demo数据测试',
+                taskType: 'AI_TAGGING',
+                executor: 'TaggingParentExecutor',
+                status: 'RUNNING',
+                subTaskCount: 5,
+                subTaskSuccess: 2,
+                subTaskFailed: 0,
+                subTaskProcessing: 3,
+                executeTime: '2026-05-11 10:00:00',
+                startTime: '2026-05-11 10:00:05',
+                createTime: '2026-05-11 09:30:00',
+                createBy: 'admin',
+                taskParams: JSON.stringify({
+                    dataSource: {
+                        type: 'ID_LIST',
+                        ids: ['MAT_001', 'MAT_002', 'MAT_003', 'MAT_004', 'MAT_005']
+                    },
+                    executor: {
+                        frameInterval: 5,
+                        maxFrames: 10,
+                        enableAsr: true,
+                        tags: ['航班', '酒店', '美食']
+                    }
+                })
+            },
+            {
+                id: 2,
+                taskCode: 'TASK_20260511_002',
+                taskName: 'AI打标-指定素材',
+                taskType: 'AI_TAGGING',
+                executor: 'TaggingParentExecutor',
+                status: 'SUCCESS',
+                subTaskCount: 3,
+                subTaskSuccess: 3,
+                subTaskFailed: 0,
+                subTaskProcessing: 0,
+                executeTime: '2026-05-10 18:00:00',
+                startTime: '2026-05-10 18:00:02',
+                endTime: '2026-05-10 18:15:30',
+                createTime: '2026-05-10 17:00:00',
+                createBy: 'admin'
+            },
+            {
+                id: 3,
+                taskCode: 'TASK_20260510_003',
+                taskName: 'AI打标-批量处理',
+                taskType: 'AI_TAGGING',
+                executor: 'TaggingParentExecutor',
+                status: 'FAILED',
+                subTaskCount: 10,
+                subTaskSuccess: 7,
+                subTaskFailed: 3,
+                subTaskProcessing: 0,
+                executeTime: '2026-05-10 14:00:00',
+                startTime: '2026-05-10 14:00:01',
+                endTime: '2026-05-10 14:30:22',
+                errorMsg: '部分子任务执行失败，请查看详情',
+                createTime: '2026-05-10 13:45:00',
+                createBy: 'tester'
+            },
+            {
+                id: 4,
+                taskCode: 'TASK_20260512_001',
+                taskName: 'AI打标-计划任务',
+                taskType: 'AI_TAGGING',
+                executor: 'TaggingParentExecutor',
+                status: 'PENDING',
+                subTaskCount: 0,
+                subTaskSuccess: 0,
+                subTaskFailed: 0,
+                subTaskProcessing: 0,
+                executeTime: '2026-05-12 09:00:00',
+                createTime: '2026-05-11 08:00:00',
+                createBy: 'admin'
+            }
+        ];
+
+        // 子任务步骤定义
+        const EXECUTOR_STEPS = [
+            { key: 'DOWNLOAD', name: '下载视频', description: '下载视频到本地临时目录' },
+            { key: 'FRAME_EXTRACT', name: '视频抽帧', description: '抽取视频帧并上传OSS' },
+            { key: 'AUDIO_EXTRACT', name: '音频提取', description: '提取音频并上传OSS' },
+            { key: 'ASR_TRANSCRIBE', name: '语音转写', description: 'ASR语音转文本' },
+            { key: 'IMAGE_ANALYZE', name: '大模型分析', description: '综合分析图片和文本' },
+            { key: 'MERGE_RESULT', name: '输出结果', description: '合并输出最终标签' }
+        ];
+
+        const mockSubTasks = [
+            {
+                id: 101,
+                subTaskCode: 'SUB_20260511_101',
+                parentTaskId: 1,
+                executor: 'TaggingChildExecutor',
+                businessType: 'MATERIAL_ANALYSIS',
+                businessKey: 'MAT_001',
+                status: 'SUCCESS',
+                startTime: '2026-05-11 10:00:10',
+                endTime: '2026-05-11 10:00:45',
+                durationMs: 35000,
+                progress: JSON.stringify({
+                    completedSteps: ['DOWNLOAD', 'FRAME_EXTRACT', 'AUDIO_EXTRACT', 'ASR_TRANSCRIBE', 'IMAGE_ANALYZE', 'MERGE_RESULT'],
+                    currentStep: null,
+                    stepResults: {
+                        frameUrls: ['https://oss.example.com/frame_001.jpg', 'https://oss.example.com/frame_002.jpg'],
+                        audioUrl: 'https://oss.example.com/audio_001.mp3',
+                        asrText: '本次航班从北京飞往上海，飞行时间约2小时...',
+                        imageAnalysis: '视频中展示的是航班登机场景...',
+                        tags: ['航班', '出行', '机票']
+                    }
+                }),
+                result: JSON.stringify({
+                    tags: ['航班', '出行', '机票'],
+                    confidence: 0.92,
+                    frameCount: 8,
+                    asrText: '本次航班从北京飞往上海...'
+                }, null, 2)
+            },
+            {
+                id: 102,
+                subTaskCode: 'SUB_20260511_102',
+                parentTaskId: 1,
+                executor: 'TaggingChildExecutor',
+                businessType: 'MATERIAL_ANALYSIS',
+                businessKey: 'MAT_002',
+                status: 'RUNNING',
+                startTime: '2026-05-11 10:01:20',
+                durationMs: 25000,
+                progress: JSON.stringify({
+                    completedSteps: ['DOWNLOAD', 'FRAME_EXTRACT', 'AUDIO_EXTRACT'],
+                    currentStep: 'ASR_TRANSCRIBE',
+                    stepResults: {
+                        frameUrls: ['https://oss.example.com/frame_003.jpg'],
+                        audioUrl: 'https://oss.example.com/audio_002.mp3'
+                    }
+                })
+            },
+            {
+                id: 103,
+                subTaskCode: 'SUB_20260511_103',
+                parentTaskId: 1,
+                executor: 'TaggingChildExecutor',
+                businessType: 'MATERIAL_ANALYSIS',
+                businessKey: 'MAT_003',
+                status: 'FAILED',
+                errorMsg: '视频下载超时',
+                startTime: '2026-05-11 10:00:30',
+                endTime: '2026-05-11 10:02:30',
+                durationMs: 120000,
+                progress: JSON.stringify({
+                    completedSteps: [],
+                    currentStep: 'DOWNLOAD',
+                    stepResults: {}
+                })
+            },
+            {
+                id: 104,
+                subTaskCode: 'SUB_20260511_104',
+                parentTaskId: 1,
+                executor: 'TaggingChildExecutor',
+                businessType: 'MATERIAL_ANALYSIS',
+                businessKey: 'MAT_004',
+                status: 'PENDING',
+                progress: JSON.stringify({
+                    completedSteps: [],
+                    currentStep: null,
+                    stepResults: {}
+                })
+            },
+            {
+                id: 105,
+                subTaskCode: 'SUB_20260511_105',
+                parentTaskId: 1,
+                executor: 'TaggingChildExecutor',
+                businessType: 'MATERIAL_ANALYSIS',
+                businessKey: 'MAT_005',
+                status: 'PENDING',
+                progress: JSON.stringify({
+                    completedSteps: [],
+                    currentStep: null,
+                    stepResults: {}
+                })
+            }
+        ];
+
+        // ==================== Status Config ====================
+        const taskStatusConfig = {
+            PENDING: { color: 'default', text: '待执行' },
+            RUNNING: { color: 'processing', text: '执行中' },
+            SUCCESS: { color: 'success', text: '成功' },
+            FAILED: { color: 'error', text: '失败' },
+            CANCELLED: { color: 'warning', text: '已取消' }
+        };
+
+        const taskTypeConfig = {
+            AI_TAGGING: { color: 'blue', text: 'AI打标' },
+            DATA_STATISTICS: { color: 'green', text: '数据统计' },
+            REPORT_SUMMARY: { color: 'purple', text: '报告汇总' }
+        };
+
+        // ==================== Components ====================
+
+        // Step Progress Component
+        function StepProgress({ progressData }) {
+            let progress;
+            try {
+                progress = typeof progressData === 'string' ? JSON.parse(progressData) : progressData;
+            } catch (e) {
+                progress = { completedSteps: [], currentStep: null };
+            }
+
+            const getStepStatus = (stepKey) => {
+                if (progress.completedSteps?.includes(stepKey)) return 'success';
+                if (progress.currentStep === stepKey) return 'running';
+                return 'pending';
+            };
+
+            return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                    {EXECUTOR_STEPS.map((step, index) => {
+                        const status = getStepStatus(step.key);
+                        return (
+                            <Tooltip key={step.key} title={step.description}>
+                                <span className="step-status">
+                                    <span className={`step-status-icon ${status}`}>
+                                        {status === 'success' ? '✓' : status === 'running' ? '●' : index + 1}
+                                    </span>
+                                    <span style={{
+                                        fontSize: 12,
+                                        color: status === 'success' ? '#10b981' : status === 'running' ? '#6366f1' : '#6b7280'
+                                    }}>
+                                        {step.name}
+                                    </span>
+                                </span>
+                            </Tooltip>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        // Task List Page
+        function TaskListPage({ onNavigate }) {
+            const [tasks, setTasks] = useState(mockTasks);
+            const [loading, setLoading] = useState(false);
+            const [filters, setFilters] = useState({});
+
+            const columns = [
+                {
+                    title: '任务编码',
+                    dataIndex: 'taskCode',
+                    width: 180,
+                    render: (text) => <a onClick={() => onNavigate('detail', 1)}>{text}</a>
+                },
+                {
+                    title: '任务名称',
+                    dataIndex: 'taskName',
+                    ellipsis: true
+                },
+                {
+                    title: '任务类型',
+                    dataIndex: 'taskType',
+                    width: 120,
+                    render: (type) => {
+                        const config = taskTypeConfig[type];
+                        return <Tag color={config.color}>{config.text}</Tag>;
+                    }
+                },
+                {
+                    title: '状态',
+                    dataIndex: 'status',
+                    width: 120,
+                    render: (status) => {
+                        const config = taskStatusConfig[status];
+                        return <Tag color={config.color}>{config.text}</Tag>;
+                    }
+                },
+                {
+                    title: '进度',
+                    width: 180,
+                    render: (_, record) => {
+                        if (record.status === 'PENDING') return '-';
+                        const percent = record.subTaskCount > 0
+                            ? Math.round((record.subTaskSuccess / record.subTaskCount) * 100)
+                            : 0;
+                        return (
+                            <div style={{ minWidth: 120 }}>
+                                <Progress
+                                    percent={percent}
+                                    size="small"
+                                    status={record.status === 'FAILED' ? 'exception' : (record.status === 'RUNNING' ? 'active' : 'success')}
+                                />
+                                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                                    {record.subTaskSuccess}/{record.subTaskCount}
+                                    {record.subTaskFailed > 0 && <span style={{ color: '#ef4444' }}> (失败{record.subTaskFailed})</span>}
+                                </div>
+                            </div>
+                        );
+                    }
+                },
+                {
+                    title: '计划执行时间',
+                    dataIndex: 'executeTime',
+                    width: 160
+                },
+                {
+                    title: '创建人',
+                    dataIndex: 'createBy',
+                    width: 100
+                },
+                {
+                    title: '操作',
+                    width: 200,
+                    render: (_, record) => (
+                        <Space size="small">
+                            <Button type="link" size="small" onClick={() => onNavigate('detail', record.id)}>详情</Button>
+                            {record.status === 'PENDING' && (
+                                <Popconfirm title="确定取消该任务吗？" onConfirm={() => message.success('任务已取消')}>
+                                    <Button type="link" size="small">取消</Button>
+                                </Popconfirm>
+                            )}
+                            {record.status === 'FAILED' && (
+                                <Button type="link" size="small">重试</Button>
+                            )}
+                            <Popconfirm title="确定删除该任务吗？" onConfirm={() => message.success('任务已删除')}>
+                                <Button type="link" size="small" danger>删除</Button>
+                            </Popconfirm>
+                        </Space>
+                    )
+                }
+            ];
+
+            return (
+                <div>
+                    <div className="page-header">
+                        <div>
+                            <h1 className="page-title">任务列表</h1>
+                            <p className="page-desc">查看和管理所有任务</p>
+                        </div>
+                        <Button type="primary" onClick={() => onNavigate('create')}>新建任务</Button>
+                    </div>
+
+                    <Card bordered={false}>
+                        <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
+                            <Select
+                                placeholder="状态"
+                                style={{ width: 120 }}
+                                allowClear
+                                onChange={(v) => setFilters({ ...filters, status: v })}
+                            >
+                                {Object.entries(taskStatusConfig).map(([key, val]) => (
+                                    <Option key={key} value={key}>{val.text}</Option>
+                                ))}
+                            </Select>
+                            <RangePicker placeholder={['开始时间', '结束时间']} />
+                            <Button type="primary" ghost>查询</Button>
+                            <Button>重置</Button>
+                        </div>
+
+                        <Table
+                            dataSource={tasks}
+                            columns={columns}
+                            rowKey="id"
+                            loading={loading}
+                            pagination={{ pageSize: 10 }}
+                        />
+                    </Card>
+                </div>
+            );
+        }
+
+        // Task Create Page
+        function TaskCreatePage({ onNavigate }) {
+            const [form] = Form.useForm();
+            const [currentStep, setCurrentStep] = useState(0);
+            const [idList, setIdList] = useState('');
+
+            const handleFinish = () => {
+                message.success('任务创建成功');
+                onNavigate('list');
+            };
+
+            const steps = [
+                { title: '基本信息', description: '任务名称和时间' },
+                { title: '数据源配置', description: '选择处理数据' },
+                { title: '执行器配置', description: '执行参数设置' },
+                { title: '确认提交', description: '检查并创建' }
+            ];
+
+            // 解析ID列表
+            const parseIdList = (text) => {
+                return text
+                    .split(/[,\n]/)
+                    .map(s => s.trim())
+                    .filter(s => s.length > 0);
+            };
+
+            return (
+                <div>
+                    <div className="page-header">
+                        <div>
+                            <h1 className="page-title">新建任务</h1>
+                            <p className="page-desc">配置并创建新任务</p>
+                        </div>
+                        <Button onClick={() => onNavigate('list')}>返回列表</Button>
+                    </div>
+
+                    <Card bordered={false}>
+                        <Steps current={currentStep} items={steps} style={{ marginBottom: 32 }} />
+
+                        <Form form={form} layout="vertical">
+                            {currentStep === 0 && (
+                                <div style={{ maxWidth: 600 }}>
+                                    <Form.Item name="taskName" label="任务名称" rules={[{ required: true, message: '请输入任务名称' }]}>
+                                        <Input placeholder="如：AI打标-Demo数据测试" />
+                                    </Form.Item>
+                                    <Form.Item name="taskType" label="任务类型" rules={[{ required: true }]} initialValue="AI_TAGGING">
+                                        <Select disabled>
+                                            <Option value="AI_TAGGING">AI打标</Option>
+                                        </Select>
+                                    </Form.Item>
+                                    <Form.Item name="executeTime" label="计划执行时间" rules={[{ required: true, message: '请选择执行时间' }]}>
+                                        <DatePicker showTime style={{ width: '100%' }} placeholder="选择计划执行时间" />
+                                    </Form.Item>
+                                    <Form.Item name="description" label="任务描述">
+                                        <TextArea rows={3} placeholder="任务描述信息（可选）" />
+                                    </Form.Item>
+                                </div>
+                            )}
+
+                            {currentStep === 1 && (
+                                <div style={{ maxWidth: 800 }}>
+                                    <div className="config-section">
+                                        <div className="config-section-title">素材ID列表</div>
+                                        <Form.Item
+                                            name={['dataSource', 'ids']}
+                                            rules={[{ required: true, message: '请输入素材ID' }]}
+                                            extra="支持逗号分隔或换行输入，如：MAT_001, MAT_002 或每行一个ID"
+                                        >
+                                            <TextArea
+                                                rows={8}
+                                                placeholder="输入素材ID，支持以下格式：&#10;&#10;逗号分隔：MAT_001, MAT_002, MAT_003&#10;&#10;换行分隔：&#10;MAT_001&#10;MAT_002&#10;MAT_003"
+                                                className="material-id-input"
+                                                onChange={(e) => setIdList(e.target.value)}
+                                            />
+                                        </Form.Item>
+                                        {idList && (
+                                            <Alert
+                                                message={`已识别 ${parseIdList(idList).length} 个素材ID`}
+                                                type="info"
+                                                showIcon
+                                                style={{ marginTop: 8 }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {currentStep === 2 && (
+                                <div style={{ maxWidth: 800 }}>
+                                    <div className="config-section">
+                                        <div className="config-section-title">AI打标参数配置</div>
+                                        <Row gutter={16}>
+                                            <Col span={8}>
+                                                <Form.Item name={['executor', 'frameInterval']} label="抽帧间隔(秒)" initialValue={5}>
+                                                    <InputNumber min={1} max={60} style={{ width: '100%' }} />
+                                                </Form.Item>
+                                            </Col>
+                                            <Col span={8}>
+                                                <Form.Item name={['executor', 'maxFrames']} label="最大帧数" initialValue={10}>
+                                                    <InputNumber min={1} max={50} style={{ width: '100%' }} />
+                                                </Form.Item>
+                                            </Col>
+                                            <Col span={8}>
+                                                <Form.Item name={['executor', 'enableAsr']} label="启用ASR" valuePropName="checked" initialValue={true}>
+                                                    <Switch checkedChildren="开" unCheckedChildren="关" />
+                                                </Form.Item>
+                                            </Col>
+                                        </Row>
+                                        <Form.Item name={['executor', 'tags']} label="目标标签" rules={[{ required: true, message: '请选择目标标签' }]}>
+                                            <Select mode="multiple" placeholder="选择需要识别的标签">
+                                                <Option value="航班">航班</Option>
+                                                <Option value="酒店">酒店</Option>
+                                                <Option value="美食">美食</Option>
+                                                <Option value="旅行">旅行</Option>
+                                                <Option value="景点">景点</Option>
+                                                <Option value="购物">购物</Option>
+                                            </Select>
+                                        </Form.Item>
+                                        <Form.Item name={['executor', 'promptTemplate']} label="提示词模板" extra="留空使用默认模板">
+                                            <TextArea rows={3} placeholder="自定义提示词模板（可选）" />
+                                        </Form.Item>
+                                    </div>
+
+                                    <Divider />
+
+                                    <Row gutter={16}>
+                                        <Col span={8}>
+                                            <Form.Item name="maxRetry" label="最大重试次数" initialValue={3}>
+                                                <InputNumber min={0} max={10} style={{ width: '100%' }} />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Form.Item name="timeout" label="超时时间(分钟)" initialValue={60}>
+                                                <InputNumber min={1} style={{ width: '100%' }} />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={8}>
+                                            <Form.Item name="priority" label="优先级" initialValue={5}>
+                                                <Select>
+                                                    {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                                                        <Option key={n} value={n}>{n}</Option>
+                                                    ))}
+                                                </Select>
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+                                </div>
+                            )}
+
+                            {currentStep === 3 && (
+                                <div style={{ maxWidth: 800 }}>
+                                    <Alert
+                                        message="请确认任务配置信息"
+                                        description="任务创建后将按计划时间执行，可在任务详情页查看进度"
+                                        type="info"
+                                        showIcon
+                                        style={{ marginBottom: 24 }}
+                                    />
+
+                                    <Descriptions bordered column={2}>
+                                        <Descriptions.Item label="任务名称">{form.getFieldValue('taskName') || '-'}</Descriptions.Item>
+                                        <Descriptions.Item label="任务类型">
+                                            <Tag color="blue">AI打标</Tag>
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="素材数量">
+                                            {parseIdList(form.getFieldValue(['dataSource', 'ids']) || '').length} 个
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="抽帧间隔">{form.getFieldValue(['executor', 'frameInterval']) || 5} 秒</Descriptions.Item>
+                                        <Descriptions.Item label="最大帧数">{form.getFieldValue(['executor', 'maxFrames']) || 10} 帧</Descriptions.Item>
+                                        <Descriptions.Item label="启用ASR">
+                                            {form.getFieldValue(['executor', 'enableAsr']) !== false ? '是' : '否'}
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="目标标签" span={2}>
+                                            {(form.getFieldValue(['executor', 'tags']) || []).map(tag => (
+                                                <Tag key={tag} color="blue">{tag}</Tag>
+                                            ))}
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="计划执行时间">
+                                            {form.getFieldValue('executeTime')?.format('YYYY-MM-DD HH:mm:ss') || '-'}
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="最大重试次数">{form.getFieldValue('maxRetry') || 3} 次</Descriptions.Item>
+                                    </Descriptions>
+                                </div>
+                            )}
+                        </Form>
+
+                        <Divider />
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Button onClick={() => setCurrentStep(Math.max(0, currentStep - 1))} disabled={currentStep === 0}>
+                                上一步
+                            </Button>
+                            <Space>
+                                <Button onClick={() => onNavigate('list')}>取消</Button>
+                                {currentStep < 3 ? (
+                                    <Button type="primary" onClick={() => setCurrentStep(currentStep + 1)}>
+                                        下一步
+                                    </Button>
+                                ) : (
+                                    <Button type="primary" onClick={handleFinish}>
+                                        创建任务
+                                    </Button>
+                                )}
+                            </Space>
+                        </div>
+                    </Card>
+                </div>
+            );
+        }
+
+        // Task Detail Page
+        function TaskDetailPage({ onNavigate, taskId }) {
+            const [activeTab, setActiveTab] = useState('overview');
+            const task = mockTasks[0]; // mock data
+
+            const renderOverview = () => (
+                <div>
+                    {/* Progress Overview */}
+                    <Card className="task-progress">
+                        <Row gutter={24}>
+                            <Col span={6}>
+                                <Progress
+                                    type="circle"
+                                    percent={task.subTaskCount > 0 ? Math.round((task.subTaskSuccess / task.subTaskCount) * 100) : 0}
+                                    status={task.status === 'FAILED' ? 'exception' : 'active'}
+                                />
+                            </Col>
+                            <Col span={18}>
+                                <div className="progress-stats">
+                                    <div className="stat-item">
+                                        <div className="stat-value">{task.subTaskCount}</div>
+                                        <div className="stat-label">总数</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <div className="stat-value" style={{ color: '#10b981' }}>{task.subTaskSuccess}</div>
+                                        <div className="stat-label">成功</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <div className="stat-value" style={{ color: '#ef4444' }}>{task.subTaskFailed}</div>
+                                        <div className="stat-label">失败</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <div className="stat-value" style={{ color: '#6366f1' }}>{task.subTaskProcessing}</div>
+                                        <div className="stat-label">处理中</div>
+                                    </div>
+                                </div>
+                            </Col>
+                        </Row>
+                    </Card>
+
+                    {/* Task Info */}
+                    <Card title="任务信息" style={{ marginBottom: 24 }}>
+                        <Descriptions bordered column={2}>
+                            <Descriptions.Item label="任务编码">{task.taskCode}</Descriptions.Item>
+                            <Descriptions.Item label="任务名称">{task.taskName}</Descriptions.Item>
+                            <Descriptions.Item label="任务类型">
+                                <Tag color={taskTypeConfig[task.taskType]?.color}>{taskTypeConfig[task.taskType]?.text}</Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="执行器">{task.executor}</Descriptions.Item>
+                            <Descriptions.Item label="状态">
+                                <Tag color={taskStatusConfig[task.status]?.color}>{taskStatusConfig[task.status]?.text}</Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="创建人">{task.createBy}</Descriptions.Item>
+                            <Descriptions.Item label="计划执行时间">{task.executeTime}</Descriptions.Item>
+                            <Descriptions.Item label="实际开始时间">{task.startTime || '-'}</Descriptions.Item>
+                            <Descriptions.Item label="创建时间">{task.createTime}</Descriptions.Item>
+                            <Descriptions.Item label="结束时间">{task.endTime || '-'}</Descriptions.Item>
+                        </Descriptions>
+                    </Card>
+
+                    {/* Task Params */}
+                    <Card title="任务参数">
+                        <div className="json-preview">
+                            <pre>{`{
+  "dataSource": {
+    "type": "ID_LIST",
+    "ids": ["MAT_001", "MAT_002", "MAT_003", "MAT_004", "MAT_005"]
+  },
+  "executor": {
+    "frameInterval": 5,
+    "maxFrames": 10,
+    "enableAsr": true,
+    "tags": ["航班", "酒店", "美食"]
+  }
+}`}</pre>
+                        </div>
+                    </Card>
+                </div>
+            );
+
+            const subTaskColumns = [
+                { title: '子任务编码', dataIndex: 'subTaskCode', width: 160 },
+                {
+                    title: '素材ID',
+                    dataIndex: 'businessKey',
+                    width: 100,
+                    render: (text) => <Tag>{text}</Tag>
+                },
+                {
+                    title: '状态',
+                    dataIndex: 'status',
+                    width: 100,
+                    render: (status) => {
+                        const config = taskStatusConfig[status] || { color: 'default', text: status };
+                        return <Tag color={config.color}>{config.text}</Tag>;
+                    }
+                },
+                {
+                    title: '执行进度',
+                    width: 400,
+                    render: (_, record) => <StepProgress progressData={record.progress} />
+                },
+                { title: '开始时间', dataIndex: 'startTime', width: 150 },
+                {
+                    title: '耗时',
+                    dataIndex: 'durationMs',
+                    width: 80,
+                    render: (ms) => ms ? `${(ms/1000).toFixed(1)}s` : '-'
+                },
+                {
+                    title: '操作',
+                    width: 100,
+                    render: (_, record) => (
+                        <Space>
+                            <Button type="link" size="small">详情</Button>
+                            {record.status === 'FAILED' && <Button type="link" size="small">重试</Button>}
+                        </Space>
+                    )
+                }
+            ];
+
+            const renderSubTasks = () => (
+                <Card>
+                    <Table
+                        dataSource={mockSubTasks}
+                        columns={subTaskColumns}
+                        rowKey="id"
+                        pagination={{ pageSize: 10 }}
+                    />
+                </Card>
+            );
+
+            const renderResult = () => (
+                <Card>
+                    {task.status === 'SUCCESS' ? (
+                        <div>
+                            <Alert
+                                message="任务执行成功"
+                                description={`共处理 ${task.subTaskCount} 条数据，成功 ${task.subTaskSuccess} 条`}
+                                type="success"
+                                showIcon
+                                style={{ marginBottom: 24 }}
+                            />
+
+                            <Descriptions title="执行结果汇总" bordered column={2}>
+                                <Descriptions.Item label="处理总数">{task.subTaskCount}</Descriptions.Item>
+                                <Descriptions.Item label="成功率">{Math.round((task.subTaskSuccess / task.subTaskCount) * 100)}%</Descriptions.Item>
+                                <Descriptions.Item label="平均耗时">35.2秒</Descriptions.Item>
+                                <Descriptions.Item label="总耗时">约28分钟</Descriptions.Item>
+                            </Descriptions>
+                        </div>
+                    ) : task.status === 'FAILED' ? (
+                        <div>
+                            <Alert
+                                message="任务执行失败"
+                                description={task.errorMsg}
+                                type="error"
+                                showIcon
+                                style={{ marginBottom: 24 }}
+                            />
+                            <Button type="primary">重试失败任务</Button>
+                        </div>
+                    ) : (
+                        <Empty description="任务尚未完成" />
+                    )}
+                </Card>
+            );
+
+            return (
+                <div>
+                    <div className="page-header">
+                        <div>
+                            <h1 className="page-title">任务详情</h1>
+                            <p className="page-desc">{task.taskName}</p>
+                        </div>
+                        <Space>
+                            <Button onClick={() => onNavigate('list')}>返回列表</Button>
+                            {task.status === 'RUNNING' && (
+                                <Popconfirm title="确定取消该任务吗？">
+                                    <Button danger>取消任务</Button>
+                                </Popconfirm>
+                            )}
+                            {task.status === 'FAILED' && (
+                                <Button type="primary">重试任务</Button>
+                            )}
+                        </Space>
+                    </div>
+
+                    <Tabs
+                        activeKey={activeTab}
+                        onChange={setActiveTab}
+                        className="page-tabs"
+                        items={[
+                            { key: 'overview', label: '概览' },
+                            { key: 'subtasks', label: '子任务' },
+                            { key: 'result', label: '执行结果' }
+                        ]}
+                    />
+
+                    {activeTab === 'overview' && renderOverview()}
+                    {activeTab === 'subtasks' && renderSubTasks()}
+                    {activeTab === 'result' && renderResult()}
+                </div>
+            );
+        }
+
+        // Main App
+        function App() {
+            const [page, setPage] = useState('list');
+            const [taskId, setTaskId] = useState(null);
+
+            const handleNavigate = (targetPage, id = null) => {
+                setPage(targetPage);
+                setTaskId(id);
+            };
+
+            const renderContent = () => {
+                switch (page) {
+                    case 'list':
+                        return <TaskListPage onNavigate={handleNavigate} />;
+                    case 'create':
+                        return <TaskCreatePage onNavigate={handleNavigate} />;
+                    case 'detail':
+                        return <TaskDetailPage onNavigate={handleNavigate} taskId={taskId} />;
+                    default:
+                        return <TaskListPage onNavigate={handleNavigate} />;
+                }
+            };
+
+            return (
+                <Layout className="app-layout">
+                    <Sider width={240} theme="dark" className="app-sider">
+                        <div className="sider-logo">
+                            <h1>ODIN</h1>
+                            <span>内容中台</span>
+                        </div>
+                        <Menu
+                            theme="dark"
+                            mode="inline"
+                            selectedKeys={[page === 'detail' ? 'list' : page]}
+                            defaultOpenKeys={['task-sub']}
+                            className="sider-menu"
+                        >
+                            <SubMenu key="tag-sub" icon={<span>🏷️</span>} title="标签管理">
+                                <Menu.Item key="tag-visual">可视化配置</Menu.Item>
+                                <Menu.Item key="tag-category">分类管理</Menu.Item>
+                                <Menu.Item key="tag-list">标签列表</Menu.Item>
+                            </SubMenu>
+                            <SubMenu key="task-sub" icon={<span>📋</span>} title="任务管理">
+                                <Menu.Item key="list" onClick={() => setPage('list')}>任务列表</Menu.Item>
+                                <Menu.Item key="create" onClick={() => setPage('create')}>新建任务</Menu.Item>
+                            </SubMenu>
+                        </Menu>
+                    </Sider>
+                    <Content className="app-content">
+                        {renderContent()}
+                    </Content>
+                </Layout>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
