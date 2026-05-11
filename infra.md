@@ -9,12 +9,13 @@
 | QSchedule | 定时任务调度 | [tec/components.md](infra/tec/components.md#2-qschedule-定时任务) |
 | Redis | 缓存、分布式锁 | [tec/redis.md](infra/tec/redis.md) |
 | MyBatis | ORM 框架 | [tec/components.md](infra/tec/components.md#4-mybatis-mapper) |
-| Elasticsearch | 搜索引擎 | [tec/components.md](infra/tec/components.md#6-elasticsearch) |
+| JsonUtils | JSON 工具类 | [tec/components.md](infra/tec/components.md#5-jsonutils-工具类) |
+| Elasticsearch | 搜索引擎 | [tec/components.md](infra/tec/components.md#7-elasticsearch) |
 
 ## 业务模块
 
-| 模块 | 说明 |
-|------|------|
-| 标签管理 | 标签分类 + 叶子标签 CRUD |
-| 原始内容 | 数仓宽表同步 + CRUD |
-| AI 服务 | ASR 转写 + 图像理解 |
+| 模块    | 说明               |
+| ----- | ---------------- |
+| 标签管理  | 标签分类 + 叶子标签 CRUD |
+| 原始内容  | 数仓宽表同步 + CRUD    |
+| AI 服务 | ASR 转写 + 图像理解    |

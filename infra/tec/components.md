@@ -263,7 +263,27 @@ public interface XxxMapper {
 resources/mapper/XxxMapper.xml
 ```
 
-## 5. QMonitor 监控
+## 5. JsonUtils 工具类
+
+路径：`com.qunar.ug.flight.contact.odin.server.infra.util.JsonUtils`
+
+```java
+import com.qunar.ug.flight.contact.odin.server.infra.util.JsonUtils;
+
+// 对象转 JSON
+String json = JsonUtils.toJson(obj);
+
+// JSON 转对象
+User user = JsonUtils.jsonToObject(json, User.class);
+
+// JSON 转 Map
+Map<String, Object> map = JsonUtils.jsonToObject(json, Map.class);
+
+// 对象转 Map（递归）
+Map<String, Object> map = JsonUtils.objectToMap(obj);
+```
+
+## 6. QMonitor 监控
 
 ```java
 // 计数
@@ -276,7 +296,7 @@ long startTime = System.nanoTime();
 QMonitor.recordOne("metric_name", System.nanoTime() - startTime);
 ```
 
-## 6. Elasticsearch
+## 7. Elasticsearch
 
 ```java
 @Resource
