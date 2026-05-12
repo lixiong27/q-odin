@@ -296,7 +296,69 @@ long startTime = System.nanoTime();
 QMonitor.recordOne("metric_name", System.nanoTime() - startTime);
 ```
 
-## 7. Elasticsearch
+## 8. HttpUtils HTTP客户端
+
+路径：`com.qunar.ug.flight.contact.odin.server.infra.util.HttpUtils`
+
+基于 `QunarAsyncClient`（qunar.hc）封装，支持 GET/POST（JSON Body、表单参数）。
+
+### 默认配置
+
+| 参数 | 值 |
+|------|-----|
+| 最大连接数 | 1000 |
+| 每 Host 最大连接 | 100 |
+| 连接超时 | 1s |
+| 请求超时 | **120s** |
+| 读超时 | **120s** |
+
+### POST JSON
+
+```java
+import com.qunar.ug.flight.contact.odin.server.infra.util.HttpUtils;
+
+Map<String, Object> headers = new HashMap<>();
+headers.put("Authorization", "Bearer xxx");
+
+String response = HttpUtils.postHttp(
+    "http://api.example.com/v1/chat/completions",
+    "{\"key\": \"value\"}",       // JSON body
+    headers,
+    60000,                        // 超时时间
+    TimeUnit.MILLISECONDS
+);
+```
+
+### POST 表单
+
+```java
+Map<String, Object> params = new HashMap<>();
+params.put("key", "value");
+
+Map<String, Object> headers = new HashMap<>();
+headers.put("Content-Type", "application/x-www-form-urlencoded");
+
+String response = HttpUtils.postHttp(url, params, headers, 30000, TimeUnit.MILLISECONDS);
+```
+
+### GET 请求
+
+```java
+String response = HttpUtils.getHttp(url, paramsMap, 30000, TimeUnit.MILLISECONDS);
+```
+
+### 带解析函数的请求
+
+```java
+User user = HttpUtils.postHttp(url, jsonBody, headers, 30000, TimeUnit.MILLISECONDS,
+    responseBody -> JsonUtils.jsonToObject(responseBody, User.class));
+```
+
+### 注意
+
+1. 超时时间传 `QConfig` 配置值（如 `AigcQConfig.getAsrTimeout()`），兜底走类静态默认值（120s）
+2. 异常时返回 `null`，调用方需判空
+3. 所有请求自动记录 QMonitor 耗时指标（`post_http_json`、`get_http` 等）
 
 ```java
 @Resource
