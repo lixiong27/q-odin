@@ -145,7 +145,77 @@ public enum ResultEnum {
 }
 ```
 
-## 7. 包结构
+## 8. 主流程代码规范
+
+**主流程函数必须拆分子函数，每个子函数职责单一：**
+
+```java
+// ✅ 正确：主流程清晰，逻辑拆分子函数
+@Override
+@Transactional(rollbackFor = Exception.class)
+public void sync(RawContentInfo raw) {
+    try {
+        ContentBase base = fetchOrCreateBase(raw);
+        if (isFirstSync(base)) {
+            base = createBase(raw);
+            writeText(raw, base);
+            writeMedia(raw, base);
+            updateRelations(base);
+        }
+        writeLabel(raw, base);
+        writeMetrics(raw, base);
+    } catch (Exception e) {
+        log.error("sync failed", e);
+        throw e;
+    }
+}
+
+// ❌ 错误：主流程函数包含全部细节，超过 50 行
+public void sync(RawContentInfo raw) {
+    // 查表
+    // if 判断
+    // 构建对象，set 20 个字段
+    // INSERT
+    // 再查另一张表
+    // 再构建对象，再 set 20 个字段
+    // ... 全部混在一起
+}
+```
+
+**构建对象使用 `buildXxx()` 命名，统一管理 set 逻辑：**
+
+```java
+// ✅ 正确：用 build 方法封装对象构建
+private ContentBase buildContentBase(RawContentInfo raw) {
+    ContentBase base = new ContentBase();
+    base.setContentId(raw.getContentId());
+    base.setBusinessContentId(raw.getBusinessContentId());
+    base.setContentType(raw.getContentType());
+    base.setContentTitle(raw.getContentTitle());
+    // ... 所有 set 集中在这里
+    return base;
+}
+
+// ✅ 用 buildParam 命名参数构建（偏平铺直叙的转换用 build）
+private List<Long> buildImages(RawContentInfo raw) {
+    // 图片 URL 拆分、去重、INSERT 或复用
+}
+
+// ❌ 错误：在业务逻辑中散落大量 set 调用
+ContentBase base = new ContentBase();
+base.setContentId(raw.getContentId());
+base.setBusinessContentId(raw.getBusinessContentId());
+// ... 20 行 set
+contentBaseMapper.insert(base);
+
+ContentText text = new ContentText();
+text.setContentTitle(raw.getContentTitle());
+text.setContentText(raw.getContentText());
+// ... 又 10 行 set
+contentTextMapper.insert(text);
+```
+
+## 9. 包结构
 
 ```
 domain/
