@@ -270,8 +270,24 @@ public interface RawContentSyncService {
 
 ## 当前状态
 
-**阶段：** 设计文档 — 已完成
+**阶段：** 全部实现 — 已完成
+
+**实现产出（24 新建 + 1 修改）：**
+
+| 类别 | 文件 |
+|------|------|
+| 实体 | ContentBase, ContentText, ContentImage, ContentVideo, ContentMetrics, ContentLabel |
+| Mapper 接口 | ContentBaseMapper, ContentTextMapper, ContentImageMapper, ContentVideoMapper, ContentMetricsMapper, ContentLabelMapper |
+| XML | ContentBaseMapper.xml ~ ContentLabelMapper.xml (6 文件) |
+| 常量 | ContentType, PreprocessStatus, ImageType, ContentRelations |
+| 服务接口 | RawContentSyncService |
+| 服务实现 | RawContentSyncServiceImpl (sync → 6 表写入) |
+| 修改 | RawContentServiceImpl (syncDb + doPostSync 实现) |
+
+**提交记录：**
+- `odin_server`: `d5385f6` — feat: implement business table sync (6 tables + OSS)
+- `q-odin`: `a2c3863` — feat: submodule update
 
 **阻塞项：** 无
 
-**下一步：** 进入实现阶段
+**下一步：** CI 编译验证 → 测试环境部署验证
