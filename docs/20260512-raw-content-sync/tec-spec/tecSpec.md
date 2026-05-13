@@ -10,17 +10,33 @@ RawContentSyncService.sync(RawContentInfo raw):
   首次同步                 二次同步
   (base == null)           (base != null)
         │                       │
-  1. INSERT content_base       │
-  2. buildText() → text_ids    │
-  3. 按 contentType 分流:       │
-     ├─ "图文帖" → buildImages() → image_ids
-     ├─ "短视频" → buildVideo() → video_ids
-     │            buildVideoCover() → image_ids
-     └─ 其他 → 跳过              │
-  4. UPDATE content_relations  │
-        │                       │
-  5. buildLabel() (upsert)  ◄──┘
-  6. buildMetrics() (upsert)
+  ┌ 事务内 (DB写入，无 OSS) ─┐  │
+  │                         │  │
+  │ 1. INSERT content_base  │  │
+  │ 2. buildText()→text_ids │  │
+  │ 3. contentType 分流:     │  │
+  │    ├─ "图文帖"           │  │
+  │    │  buildImages()     │  │
+  │    │  → image_ids       │  │
+  │    └─ "短视频"           │  │
+  │       buildVideo()      │  │
+  │       → video_ids       │  │
+  │       buildVideoCover() │  │
+  │       → image_ids       │  │
+  │ 4. UPDATE               │  │
+  │    content_relations    │  │
+  │                         │  │
+  │ 5. buildLabel()(upsert)◄┼──┘
+  │ 6. buildMetrics()(upsert)│
+  └─────────────────────────┘
+        │
+  ┌ 事务外 (OSS 转存) ───────┐
+  │                         │
+  │ 7. transferImages()     │
+  │    (正文图 + 封面图)     │
+  │ 8. transferVideos()     │
+  │    (原视频文件)          │
+  └─────────────────────────┘
 ```
 
 ---
@@ -465,10 +481,10 @@ sync() 本次同步范围:
 
 ### 4.3 图片/封面 OSS 转存
 
-事务外异步执行。图文帖和短视频的封面图都存储在 `content_image`，统一处理：
+图文帖和短视频的封面图都存储在 `content_image`，统一处理：
 
 ```
-触发时机: sync() 提交事务后，异步执行
+触发时机: syncDb() 事务提交后，同线程串行执行（见 §6 事务边界）
 扫描范围: content_relations.image_ids 中 internal_url == "" 的记录
 幂等保证: internal_url 不为空则跳过
 
@@ -508,7 +524,7 @@ public void transferImages(ContentBase base) {
 短视频的原始视频文件同样需要转存到 OSS：
 
 ```
-触发时机: sync() 提交事务后，异步执行
+触发时机: syncDb() 事务提交后，同线程串行执行（见 §6 事务边界）
 扫描范围: content_relations.video_ids 中 internal_video_url == "" 的记录
 幂等保证: internal_video_url 不为空则跳过
 ```
@@ -600,19 +616,55 @@ private List<Long> parseImageIds(String contentRelationsJson) {
 
 ---
 
-## 六、事务边界
+## 六、事务边界与执行顺序
+
+### 6.1 两阶段原则
+
+```
+每个 item 的执行严格按两阶段进行：
+  阶段一 (事务内): DB 写入 → 事务提交
+  阶段二 (事务外): OSS 转存
+
+不允许在事务内调用 OssTransferService（网络 IO 会延长事务锁时间）。
+DB 写入全部成功后才开始 OSS 转存，两者在同线程串行执行。
+```
+
+### 6.2 伪代码
 
 ```java
 @Override
 @Transactional(rollbackFor = Exception.class)
-public void sync(RawContentInfo raw) {
-    // 仅 6 张表的写入在一个事务中
+public void syncDb(RawContentInfo raw) {
+    // 阶段一：仅 DB 写入，无 OSS
     // 失败抛异常 → 全部回滚，调用方更新 SYNC_FAILED
-    // 成功 → 调用方更新 SYNCED
 }
 
-// 素材处理管线在 @Transactional 外异步执行
-// 独立定时任务驱动，失败不影响 sync 状态
+// 阶段二：OSS 转存在 @Transactional 外调用，同线程执行
+// 失败记录 QMonitor，下次重试，不影响 sync 状态
+public void sync(RawContentInfo raw) {
+    syncDb(raw);              // 事务内：DB 写入
+    doPostSync(raw);          // 事务外：OSS 转存
+}
+```
+
+### 6.3 执行顺序细节
+
+```
+sync(RawContentInfo raw):
+  │
+  ├── 阶段一: @Transactional syncDb()
+  │     ├── 首次同步 → 写入 content_base / text / image / video / label / metrics
+  │     ├── 二次同步 → upsert label + metrics
+  │     ├── 更新 content_relations
+  │     └── 事务提交（此时 DB 完整可见）
+  │
+  └── 阶段二: doPostSync() (同线程，事务外)
+        ├── contentType == "图文帖"
+        │     └── transferImages()  → 回写 content_image.internal_url
+        ├── contentType == "短视频"
+        │     ├── transferImages()  → 回写封面图 internal_url
+        │     └── transferVideos()  → 回写 content_video.internal_video_url
+        └── 任何 OSS 失败 → 记录 QMonitor，不抛异常
 ```
 
 ---
@@ -680,17 +732,40 @@ public interface ImageType {
 
 ## 十、并发同步任务设计
 
-### 10.1 设计原则
+### 10.1 设计原则与执行顺序
 
 ```
-sync() 写入 6 张表                          → 事务内，单线程（一个 sync 无并发问题）
-素材同步后 OSS 转存                         → 事务外，同线程
-                    │
-task 层面多个内容的 sync() 绑定校验并行执行     → 并发控制
+单个 item 的执行顺序（关键）:
+
+  processItem(raw)
+    │
+    ├── 第一步: syncDb(raw)            → @Transactional，仅 DB 写入
+    │       ├── INSERT content_base
+    │       ├── INSERT content_text
+    │       ├── INSERT content_image    (original_url, internal_url = "")
+    │       ├── INSERT content_video    (video_url, internal_video_url = "")
+    │       ├── UPSERT content_label
+    │       ├── UPSERT content_metrics
+    │       ├── UPDATE content_relations
+    │       └── 事务提交
+    │
+    └── 第二步: doPostSync(raw, base)  → 事务外，同线程串行
+            ├── contentType == "图文帖" → transferImages()
+            ├── contentType == "短视频" → transferImages() + transferVideos()
+            └── OSS 失败只记 QMonitor，不抛异常
 ```
 
-- **单条内容的 `sync()` + OSS 转存**：事务内串行，无并发困扰
-- **Task 批量处理**：多个内容的 `sync()` 通过线程池并行，互不影响
+**为什么要先 DB 后 OSS？**
+- OSS 转存是网络 IO，放在事务内会长时间持有 DB 连接和锁
+- DB 写入先完成提交，即使 OSS 失败，基础数据已落库，可重试补偿
+- 同线程串行保证二者有序，不需要额外的协调机制
+
+```
+task 层面多个内容的 processItem() 通过线程池并行  → 并发控制
+```
+
+- **单条内容的三步（syncDb → commit → OSS）**：同线程串行，无并发困扰
+- **Task 批量处理**：多个内容的 `processItem` 通过线程池并行，互不影响
 - **动态并发控制**：一次执行多少条通过 QConfig 可调
 
 ### 10.2 线程池配置
@@ -770,7 +845,10 @@ QSchedule 触发
             │   ├── 按 maxConcurrency 分批
             │   │       │
             │   │       └── 每批:
-            │   │               ├── CompletableFuture.runAsync(() -> sync(item), executor)
+            │   │               ├── processItem(item) -- 同线程串行:
+            │   │               │     第一步: syncDb()  → @Transactional DB写入
+            │   │               │     第二步: doPostSync() → OSS 转存
+            │   │               │     第三步: updateSyncStatus(SYNCED)
             │   │               ├── ... (每批并行数 = maxConcurrency)
             │   │               └── CompletableFuture.allOf(futures).get(timeout)
             │   │
@@ -930,7 +1008,10 @@ public class RawContentSyncTask {
     }
 
     private void processItem(RawContentInfo data) {
-        rawContentService.executeBusinessLogic(data);
+        // 第一步：DB 写入（事务内，无 OSS）
+        rawContentService.syncDb(data);
+        // 第二步：OSS 转存（事务外，同线程串行）
+        rawContentService.doPostSync(data);
         rawContentService.updateSyncStatus(data.getId(), SyncStatus.SYNCED.getCode());
     }
 
@@ -974,7 +1055,9 @@ public class RawContentSyncTask {
 
 | 要点 | 说明 |
 |------|------|
-| OSS 转存时机 | 在 `sync()` 事务提交后，同线程内执行，不提交到另一个线程 |
+| 执行顺序 | 每个 item 严格两阶段：`syncDb()`(事务内DB) → 事务提交 → `doPostSync()`(事务外OSS) |
+| OSS 放在事务外 | 避免网络 IO 长时间占用 DB 连接和锁 |
+| OSS 失败不阻塞 | 失败只记 QMonitor，基础数据已落库可重试 |
 | 单条失败不影响批量 | `CompletableFuture.exceptionally()` 吞异常返回 null |
 | 超时兜底 | `allOf().get(5min)` 避免极端情况卡死，超时后进入下一批 |
 | 状态反查 | 批完成后重新查询 DB 确认状态，而非依赖内存变量 |
