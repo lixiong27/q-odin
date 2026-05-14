@@ -17,17 +17,13 @@
 
       "content_id":               { "type": "keyword" },
       "content_type":             { "type": "keyword" },
-      "content_title":            { "type": "text", "analyzer": "ik_max_word", "fields": { "raw": { "type": "keyword" } } },
       "publish_platform":         { "type": "keyword" },
       "publish_time":             { "type": "date" },
-      "publish_url":              { "type": "keyword", "index": false },
       "business_line":            { "type": "keyword" },
       "content_source":           { "type": "keyword" },
       "production_team":          { "type": "keyword" },
       "operation_project":        { "type": "keyword" },
       "placement_position":       { "type": "keyword" },
-
-      "content_text":             { "type": "text", "analyzer": "ik_max_word" },
 
       "city":                     { "type": "keyword" },
       "poi":                      { "type": "keyword" },
@@ -68,10 +64,7 @@
 |------|------|
 | `base_id` long | 仅存储，不用于 `_id` 以外的检索 |
 | keyword 字段 | 枚举/过滤/聚合字段，精确匹配 |
-| content_title text + keyword | text 分词检索，raw 子字段精确匹配 |
-| content_text text | 正文全文检索 |
 | ai_tag keyword | 数组类型，天然支持 term/terms/aggregations |
-| publish_url index:false | 仅存储不索引，节省空间 |
 | 指标字段 integer/float | 支持范围过滤、排序、聚合 |
 | refresh_interval 5s | 准实时，批量场景可临时调大 |
 
@@ -96,16 +89,13 @@ function onNewContent(base, text, images, metrics, label):
         base_id:             base.id,
         content_id:          base.contentId,
         content_type:        base.contentType,
-        content_title:       base.contentTitle,
         publish_platform:    base.publishPlatform,
         publish_time:        base.publishTime,
-        publish_url:         base.publishUrl,
         business_line:       base.businessLine,
         content_source:      base.contentSource,
         production_team:     base.productionTeam,
         operation_project:   base.operationProject,
         placement_position:  base.placementPosition,
-        content_text:        text.contentText,
         city:                label.city,
         poi:                 label.poi,
         ai_tag:              label.aiTag,
@@ -179,7 +169,6 @@ function batchSyncMetrics(metricList):
             if base != null:
                 doc["content_id"]        = base.contentId
                 doc["content_type"]      = base.contentType
-                doc["content_title"]     = base.contentTitle
                 doc["publish_platform"]  = base.publishPlatform
                 doc["business_line"]     = base.businessLine
                 doc["content_source"]    = base.contentSource

@@ -65,8 +65,7 @@ ContentSearchIndexService.index()   ← 同步完成后触发 ES 索引（新增
 |------|------|-------------|
 | base_id | long | 对应 `content_base.id` |
 | content_id | keyword | 对应 `content_base.content_id` |
-| content_title | text(ik_max_word) + keyword raw | 冗余自 `content_base` |
-| content_text | text(ik_max_word) | 冗余自 `content_text` |
+| content_type | keyword | 对应 `content_base.content_type` |
 | city/poi/ai_tag | keyword | 冗余自 `content_label` |
 | 全部指标 | integer/float | 冗余自 `content_metrics` |
 | sync_time | date | 记录最后同步时间，用于对账 |
@@ -93,16 +92,13 @@ public class ContentSearchDocument {
     private Long baseId;
     private String contentId;
     private String contentType;
-    private String contentTitle;
     private String publishPlatform;
     private String publishTime;       // yyyy-MM-dd HH:mm:ss
-    private String publishUrl;
     private String businessLine;
     private String contentSource;
     private String productionTeam;
     private String operationProject;
     private String placementPosition;
-    private String contentText;
     private String city;
     private String poi;
     private List<String> aiTag;       // JSON array → List<String>
@@ -133,8 +129,6 @@ if (doc != null) {
 ```
 
 **操作类型：** `IndexRequest`，`_id = baseId.toString()`，幂等覆盖
-
-**注意：** 长文本字段 `content_text`（LONGTEXT）全部写入 ES，ES 的 text 类型默认 `ignore_above` 不限。Gson 序列化 String 没有问题。
 
 ### 3.3 场景二：指标每日批量更新
 
@@ -177,27 +171,62 @@ contentSearchIndexService.update(doc);   // UpdateRequest + upsert
 
 **注意：** 这与 origin-design 一致 — AI 回调不需要查 MySQL 组装完整文档。不完整文档由修复任务兜底。
 
+### 3.5 序列化策略深究
+
+`ContentSearchDocument` 使用 `Gson` 序列化。Gson 默认 `new Gson()` 会**跳过 null 字段**（不序列化到 JSON 中）。
+
+**场景一（IndexRequest 全量）：需要所有字段都有值**
+
+- IndexRequest 用 `GSON.toJson(doc)` 生成完整 JSON 写入 ES
+- Gson 跳过 null → ES 中该字段**不存在**（不是 null，而是不存在于 `_source`）
+- 对于 `keyword` 字段：字段不存在 = term 查询无法命中
+- 对于 `integer` 字段：字段不存在 = range/sort 报错
+
+**解决方案：** `ContentSearchDocAssembler` 组装时，确保**所有指标字段有默认值 0**，**字符串字段有默认值 ""**，不要留 null：
+
+```java
+// assembleByContentId 返回的 doc 中
+doc.setTotalImpressions(Optional.ofNullable(metrics.getTotalImpressions()).orElse(0));
+doc.setContentType(Optional.ofNullable(base.getContentType()).orElse(""));
+// 其余字段同理
+```
+
+**场景二/三（UpdateRequest + upsert）：Gson 跳过 null 正好符合语义**
+
+- `UpdateRequest.doc(GSON.toJson(doc))` 中，null 字段被跳过 → ES 侧该字段**不被修改**
+- 这正是 partial update 想要的效果：只更新非 null 字段
+- 所以 `ContentSearchIndexService.updateDocument()` 可以直接调用 `GSON.toJson(doc)`，不需要额外处理
+
+**验证：** 如果用 Gson 的 `GsonBuilder().serializeNulls().create()` 会序列化 null 为 JSON literal `null`，导致 UpdateRequest 把字段显式设置为 null（覆盖原有值）。所以必须用默认 `new Gson()`，保持跳过 null 的行为。
+
+**结论：**
+
+| 场景 | 序列化方式 | null 处理 | 行为 |
+|------|-----------|----------|------|
+| 场景一 IndexRequest | `GSON.toJson(doc)` | 跳过 null（需组装默认值） | ES 写入所有字段 |
+| 场景二 UpdateRequest + upsert | `GSON.toJson(doc)` | 跳过 null（符合语义） | ES 只更新非 null 字段 |
+| 场景三 UpdateRequest + upsert | `GSON.toJson(doc)` | 同上 | 同上 |
+
 ---
 
 ## 四、搜索查询
+
+> ES 索引不存储 `content_title`、`publish_url`、`content_text`，搜索基于过滤 + 排序 + 分页。如需展示标题/正文，由调用方根据返回的 `base_id` 查 MySQL。
 
 ### 4.1 功能列表
 
 | 功能 | 说明 |
 |------|------|
-| 关键词全文检索 | content_title + content_text，ik_max_word 分词 |
 | 精确过滤 | content_type(多选)、publish_platform(多选)、business_line、content_source |
 | 标签过滤 | city、poi、ai_tag |
 | 时间范围 | publish_time 起止 |
 | 指标排序 | 按 total_impressions、total_clicks 等降序/升序 |
 | 分页 | from + size |
-| 高亮 | 标题/正文命中关键词高亮 |
 
 ### 4.2 请求/响应模型
 
 ```java
 public class ContentSearchRequest {
-    private String keyword;              // 全文检索关键词
     private List<String> contentTypes;   // 内容类型过滤
     private List<String> platforms;      // 平台过滤
     private String businessLine;         // 业务线
@@ -221,16 +250,12 @@ public class ContentSearchHit {
     private Long baseId;
     private String contentId;
     private String contentType;
-    private String contentTitle;
     private String publishPlatform;
     private String publishTime;
     private String businessLine;
     private String contentSource;
     private String productionTeam;
     private String operationProject;
-    private String contentText;          // 仅返回摘要片段
-    private String titleHighlight;       // 高亮标题
-    private String textHighlight;        // 高亮正文片段
     // ... 指标字段（可选返回）
 }
 ```
@@ -239,17 +264,9 @@ public class ContentSearchHit {
 
 ```
 SearchSourceBuilder search = new SearchSourceBuilder();
-
-// 关键词全文检索
-if (keyword is not blank):
-    BoolQueryBuilder keywordQuery = bool()
-        .should(matchQuery("content_title", keyword).boost(2.0))
-        .should(matchQuery("content_text", keyword))
-        .minimumShouldMatch(1)
-    search.query(keywordQuery)
-
-// 过滤
 BoolQueryBuilder filter = bool()
+
+// 精确过滤（全部走 filter，不参与评分）
 if contentTypes is not empty: filter.filter(terms("content_type", contentTypes))
 if platforms is not empty: filter.filter(terms("publish_platform", platforms))
 if businessLine is not blank: filter.filter(term("business_line", businessLine))
@@ -258,7 +275,7 @@ if aiTags is not empty: filter.filter(terms("ai_tag", aiTags))
 if publishTimeStart is not blank: filter.filter(range("publish_time").gte(publishTimeStart))
 if publishTimeEnd is not blank: filter.filter(range("publish_time").lte(publishTimeEnd))
 
-search.postFilter(filter)
+search.query(filter)
 
 // 排序
 if sortField is not blank:
@@ -268,16 +285,61 @@ else:
 
 // 分页
 search.from(from).size(size)
-
-// 高亮
-if keyword is not blank:
-    search.highlighter(
-        HighlightBuilder()
-            .field("content_title")
-            .field("content_text", 200)   // 片段长度 200
-            .preTags("<em>").postTags("</em>")
-    )
 ```
+
+### 4.4 排序白名单 + 搜索防护
+
+**问题：** `sortField` 开放传入 → 用户可以指定任意 ES 字段名排序。若字段不存在、类型不支持排序、或字段名拼错 → ES 返回错误。
+
+### 4.4 排序白名单 + 搜索防护
+
+**问题：** `sortField` 开放传入 → 用户可以指定任意 ES 字段名排序。若字段不存在、类型不支持排序（如 `text`）、或字段名拼错 → ES 返回错误。
+
+**方案 A：白名单校验**
+
+```java
+private static final Set<String> SORT_WHITELIST = new HashSet<>(Arrays.asList(
+    "publish_time", "total_impressions", "total_clicks", "total_reads",
+    "total_interactions", "completion_rate", "cpm", "ctr", "app_downloads",
+    "total_orders"
+));
+
+// ContentSearchServiceImpl.search() 中
+if (StringUtils.isNotBlank(request.getSortField())) {
+    if (!SORT_WHITELIST.contains(request.getSortField())) {
+        throw new IllegalArgumentException("不支持的排序字段: " + request.getSortField());
+    }
+    SortOrder order = "desc".equalsIgnoreCase(request.getSortOrder()) ? SortOrder.DESC : SortOrder.ASC;
+    builder.sort(request.getSortField(), order);
+}
+```
+
+**方案 B：try-catch 兜底回退**
+
+```java
+try {
+    SortOrder order = "desc".equalsIgnoreCase(request.getSortOrder()) ? SortOrder.DESC : SortOrder.ASC;
+    builder.sort(request.getSortField(), order);
+} catch (Exception e) {
+    log.warn("sort field {} failed, fallback to default", request.getSortField());
+    builder.sort("publish_time", SortOrder.DESC);
+}
+```
+
+| 方案 | 优点 | 缺点 |
+|------|------|------|
+| A 白名单 | 明确拒绝，用户感知清晰 | 多一个 Set + 判断 |
+| B try-catch | 灵活，不需维护白名单 | 等到执行才报错，性能略差 |
+
+**推荐方案 A**。排序字段有限且明确，白名单维护成本极低，且能在请求到达 ES 前快速拒绝。
+
+**其他防护：**
+
+| 参数 | 防护规则 |
+|------|---------|
+| `size` | `Math.max(1, Math.min(size, 100))`，默认 20，上限 100 |
+| `from` | `Math.max(0, from)`，上限 10000（ES `max_result_window` 默认值） |
+| `sortField` | 白名单校验，非法返回 400 |
 
 ---
 
@@ -437,16 +499,13 @@ SELECT
     cb.id AS base_id,
     cb.content_id,
     cb.content_type,
-    cb.content_title,
     cb.publish_platform,
     cb.publish_time,
-    cb.publish_url,
     cb.business_line,
     cb.content_source,
     cb.production_team,
     cb.operation_project,
     cb.placement_position,
-    ct.content_text,
     cl.city,
     cl.poi,
     cl.ai_tag,
@@ -454,13 +513,122 @@ SELECT
     cm.total_clicks,
     -- ... 其余指标
 FROM content_base cb
-LEFT JOIN content_text ct ON ct.id = JSON_EXTRACT(cb.content_relations, '$.text_ids[0]')
 LEFT JOIN content_label cl ON cl.base_id = cb.id
 LEFT JOIN content_metrics cm ON cm.base_id = cb.id
 WHERE cb.content_id = #{contentId}   -- 或 cb.id IN (ids)
 ```
 
-注意：`content_relations` 中的 `text_ids` 是 JSON 数组，取第一个元素。`content_text` 是写后只读的（孤儿策略），取第一个即可。image/video 数据不入 ES（ES 只存文本+指标+标签）。
+注意：ES 不存原标题/正文/URL。image/video 数据不入 ES（ES 只存分类+指标+标签）。
+
+### 6.4 DocAssembler SQL 详细设计
+
+#### 6.4.1 单条查询（assembleByContentId / assembleByBaseId）
+
+```sql
+SELECT
+    cb.id              AS base_id,
+    cb.content_id,
+    cb.content_type,
+    cb.publish_platform,
+    cb.publish_time,
+    cb.business_line,
+    cb.content_source,
+    cb.production_team,
+    cb.operation_project,
+    cb.placement_position,
+    cl.city,
+    cl.poi,
+    cl.ai_tag,
+    -- 以下指标字段，如果 content_metrics 行不存在则为 NULL
+    cm.total_impressions,
+    cm.total_clicks,
+    cm.total_reads,
+    cm.total_interactions,
+    cm.completion_rate,
+    cm.three_sec_completion_rate,
+    cm.five_sec_completion_rate,
+    cm.two_sec_bounce_rate,
+    cm.cpm,
+    cm.ctr,
+    cm.cvr,
+    cm.app_downloads,
+    cm.new_activations,
+    cm.new_registrations,
+    cm.drive_uv,
+    cm.exposure_to_read_ratio,
+    cm.potential_new_uv,
+    cm.potential_new_cac,
+    cm.attributed_new_customers,
+    cm.new_customer_cac,
+    cm.order_uv,
+    cm.total_orders
+FROM content_base cb
+LEFT JOIN content_label cl
+    ON cl.base_id = cb.id
+LEFT JOIN content_metrics cm
+    ON cm.base_id = cb.id
+WHERE cb.content_id = #{contentId}   -- 或 cb.id = #{baseId}
+```
+
+> 注：不再需要 JOIN `content_text`，ES 不存储正文内容。
+
+#### 6.4.2 批量查询（assembleByBaseIds）
+
+```sql
+SELECT
+    cb.id              AS base_id,
+    cb.content_id,
+    cb.content_type,
+    -- ...（同上所有字段）
+FROM content_base cb
+LEFT JOIN content_label cl
+    ON cl.base_id = cb.id
+LEFT JOIN content_metrics cm
+    ON cm.base_id = cb.id
+<where>
+    <if test="baseIds != null and baseIds.size() > 0">
+        AND cb.id IN
+        <foreach collection="baseIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </if>
+</where>
+```
+
+#### 6.4.3 数据类型转换（MySQL → Java）
+
+| MySQL 字段 | MySQL 类型 | Java 类型 | 注意 |
+|-----------|-----------|-----------|------|
+| `cl.ai_tag` | JSON | `String` / `List<String>` | MyBatis 接收为 String，`ContentSearchDocument` 中为 `List<String>`，需要自定 TypeHandler 或在 Service 层用 `Gson.fromJson(aiTagStr, List.class)` 转换 |
+| `cm.*_rate` | DECIMAL(8,3) | `String` / `Float` | ES mapping 中为 float，可以直接 CAST 或 MyBatis 用 BigDecimal 接收后转 Float |
+| `cm.cpm` | DECIMAL(8,4) | `String` / `Float` | 同上 |
+
+**ai_tag 类型处理方案：**
+
+MyBatis 不支持直接将 JSON 列映射为 `List<String>`。两种方案：
+
+| 方案 | 实现 | 评价 |
+|------|------|------|
+| **A: MyBatis TypeHandler** | 新建 `JsonToListTypeHandler`，在 XML resultMap 中引用 | 代码更干净，但多一个类 |
+| **B: Service 手动转换** | MyBatis 用 `String` 接收，`ContentSearchDocAssemblerImpl` 中 `new Gson().fromJson(aiTagStr, List.class)` | 更简单，不增加类 |
+
+推荐方案 B，因为只有 `ai_tag` 一个字段需要处理，引入 TypeHandler 过于重量级。
+
+#### 6.4.4 分页全量扫描（全量重建、全量对账场景）
+
+```sql
+SELECT
+    cb.id              AS base_id,
+    cb.content_id,
+    -- ...（同上所有字段）
+FROM content_base cb
+LEFT JOIN content_label cl
+    ON cl.base_id = cb.id
+LEFT JOIN content_metrics cm
+    ON cm.base_id = cb.id
+ORDER BY cb.id
+LIMIT #{offset}, #{pageSize}
+```
 
 ---
 
@@ -528,6 +696,142 @@ public class EsFullRebuildTask {
 }
 ```
 
+### 7.3 修复任务实现深挖
+
+#### 7.3.1 不完整文档修复 — ES 查询条件
+
+使用 `SearchSourceBuilder` 构造查询基础字段缺失的文档：
+
+```java
+// EsRepairTask 中
+SearchSourceBuilder builder = new SearchSourceBuilder();
+BoolQueryBuilder bool = QueryBuilders.boolQuery();
+bool.should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery("content_id")));
+bool.should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery("business_line")));
+bool.should(QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery("content_type")));
+bool.should(QueryBuilders.termQuery("content_id", ""));
+bool.should(QueryBuilders.termQuery("business_line", ""));
+bool.minimumShouldMatch(1);
+builder.query(bool);
+builder.size(100);
+builder.fetchSource(false);  // 只需要 _id
+
+SearchResponse response = elasticsearchDataSource.search("content_search", builder);
+List<Long> incompleteBaseIds = new ArrayList<>();
+for (SearchHit hit : response.getHits().getHits()) {
+    incompleteBaseIds.add(Long.parseLong(hit.getId()));
+}
+```
+
+**注意：** `termQuery("content_id", "")` 匹配 content_id 为空字符串的文档。`existsQuery("content_id")` 匹配字段**存在**的文档。组合 `must_not exists` + `term = ""` 覆盖全部缺失场景。
+
+#### 7.3.2 全量对账 — 方案对比
+
+| 方式 | 优点 | 缺点 |
+|------|------|------|
+| **MySQL 分页遍历**（推荐） | 简单，MyBatis 分页 | offset 越大越慢（< 1000w 可接受） |
+| **ES Scroll API** | 服务端游标，大量数据高效 | 维护 scroll context，需清理 |
+| **ES ids 查询** | 精确对比一批 id | 每次查询有长度限制 |
+
+推荐 **MySQL 分页遍历** 方案（< 1000w 数据量，MySQL offset 性能可接受）：
+
+```java
+// EsReconcileTask
+long total = contentBaseMapper.count();           // SELECT COUNT(*) FROM content_base
+int pageSize = 1000;
+
+for (int offset = 0; offset < total; offset += pageSize) {
+    // 1. MySQL 分页取 baseIds
+    List<Long> mysqlIds = contentBaseMapper.selectIdsPage(offset, pageSize);
+    
+    // 2. ES ids 查询
+    SearchSourceBuilder builder = new SearchSourceBuilder();
+    builder.query(QueryBuilders.idsQuery().addIds(
+        mysqlIds.stream().map(String::valueOf).toArray(String[]::new)));
+    builder.size(mysqlIds.size());
+    builder.fetchSource(false);
+    SearchResponse response = elasticsearchDataSource.search("content_search", builder);
+    Set<Long> esIdSet = Arrays.stream(response.getHits().getHits())
+        .map(h -> Long.parseLong(h.getId()))
+        .collect(Collectors.toSet());
+    
+    // 3. 对比：缺失的补全
+    List<Long> missingIds = mysqlIds.stream()
+        .filter(id -> !esIdSet.contains(id))
+        .collect(Collectors.toList());
+    
+    if (!missingIds.isEmpty()) {
+        List<ContentSearchDocument> docs = docAssembler.assembleByBaseIds(missingIds);
+        contentSearchIndexService.batchUpdateDocuments(docs);
+        QMonitor.recordOne("es_reconcile_missing", missingIds.size());
+    }
+}
+```
+
+#### 7.3.3 全量重建 — 别名切换流程
+
+```
+EsFullRebuildTask.fullRebuild():
+│
+├─ 1. 生成新索引名: "content_search_v{timestamp}"
+│      String newIndex = "content_search_v" + Instant.now().toEpochMilli();
+│
+├─ 2. 创建新索引（settings + mapping）
+│      elasticsearchDataSource.create(newIndex, settings, mapping);
+│
+├─ 3. 分页从 MySQL 6 表 JOIN 全量数据
+│      for (offset = 0; offset < total; offset += pageSize):
+│          List<ContentSearchDocument> docs = assembler.assembleByPage(offset, pageSize);
+│          elasticsearchDataSource.batchInsert(newIndex, docs);
+│
+├─ 4. 切换别名（原子操作）
+│      IndicesAliasesRequest aliasRequest = new IndicesAliasesRequest();
+│      aliasRequest.addAliasAction(AliasActions.remove()
+│          .index("content_search").alias("content_search_alias"));
+│      aliasRequest.addAliasAction(AliasActions.add()
+│          .index(newIndex).alias("content_search_alias"));
+│      restHighLevelClient.indices().updateAliases(aliasRequest, RequestOptions.DEFAULT);
+│
+└─ 5. 删除旧索引
+        DeleteIndexRequest deleteRequest = new DeleteIndexRequest("content_search");
+        restHighLevelClient.indices().delete(deleteRequest, RequestOptions.DEFAULT);
+```
+
+**别名设计方案：**
+
+| 别名 | 指向 | 用途 |
+|------|------|------|
+| `content_search_alias` | 当前活跃索引 | 搜索 API、写入服务均通过别名访问 |
+| `content_search` | 初始索引名 | 启动时创建，重建后由别名接管 |
+
+**写入路径统一走别名：**
+
+```java
+// IndexQConfig 或常量
+private static final String ES_INDEX = "content_search_alias";
+
+// ContentSearchIndexService 中：
+elasticsearchDataSource.update(ES_INDEX, id, doc);
+```
+
+而非写死 `content_search`。这样全量重建切换别名后，写入路径自动指向新索引，无需修改代码。
+
+**双写策略（重建期间）：**
+
+```java
+// ContentSearchIndexService 中
+void indexDocument(ContentSearchDocument doc) {
+    if (rebuildInProgress) {
+        elasticsearchDataSource.batchInsert(newIndex, Collections.singletonList(doc));
+    }
+    elasticsearchDataSource.update(ES_INDEX, doc.getBaseId().toString(), doc);
+}
+```
+
+- `rebuildInProgress` 是 `EsFullRebuildTask` 中设置的 `volatile boolean` 标志
+- 双写确保重建期间写入的数据不丢失
+- 别名切换后，新写入自动进入新索引
+
 ---
 
 ## 八、动态配置（QConfig）
@@ -536,6 +840,7 @@ public class EsFullRebuildTask {
 
 ```properties
 # es-index.properties
+es.sync.enabled=true              # ES 同步总开关，关闭后跳过所有 ES 写入
 es.index.shards=3
 es.index.replicas=1
 es.index.refresh.interval=5s
@@ -550,6 +855,7 @@ es.repair.interval.minutes=30
 @Service
 public class IndexQConfig {
 
+    private volatile boolean syncEnabled = true;   // ES 同步总开关
     private volatile int shards = 3;
     private volatile int replicas = 1;
     private volatile String refreshInterval = "5s";
@@ -560,6 +866,7 @@ public class IndexQConfig {
     @QConfig("es-index.properties")
     private void onChanged(Map<String, String> map) {
         if (map == null) return;
+        syncEnabled = Boolean.parseBoolean(map.getOrDefault("es.sync.enabled", "true"));
         // 解析各项...
     }
 }
@@ -629,21 +936,104 @@ GET /api/content/search
 
 ## 十一、与 raw-content-sync 的集成时序
 
+### 11.1 现有代码结构
+
+```java
+// RawContentServiceImpl.triggerSync(int limit) ← 无 @Transactional
+for (RawContentInfo raw : records) {
+    syncDb(data);       // @Transactional MySQL 写入
+    doPostSync(data);   // OSS 转存（图文转存图片，短视频转存视频）
+    updateSyncStatus(data.getContentId(), SyncStatus.SYNCED);
+}
+```
+
+```java
+// RawContentSyncServiceImpl.sync(RawContentInfo raw)
+@Transactional(rollbackFor = Exception.class)
+void sync(RawContentInfo raw) {
+    ContentBase existing = contentBaseMapper.selectByContentId(raw.getContentId());
+    if (existing != null) {
+        // 二次同步：只更新指标 + 标签
+        buildLabel(raw, existing.getId());
+        buildMetrics(raw, existing.getId());
+        return;
+    }
+    // 首次同步：6 表全写...
+}
+```
+
+### 11.2 集成方案
+
+**ES 写入的钩入点：** `triggerSync()` 中 `syncDb()` 和 `doPostSync()` 之后，`updateSyncStatus()` 之前。这个位置已脱离 `@Transactional` 范围，ES 失败不会回滚 MySQL。
+
+```java
+// RawContentServiceImpl.triggerSync(int limit) 改造后
+for (RawContentInfo raw : records) {
+    syncDb(data);                         // 1. MySQL（@Transactional）
+    doPostSync(data);                     // 2. OSS 转存
+    
+    // 3. ES 索引（新增，开关控制）
+    if (indexQConfig.isSyncEnabled()) {
+        try {
+            ContentBase base = contentBaseMapper.selectByContentId(raw.getContentId());
+            if (base != null) {
+                ContentSearchDocument doc = docAssembler.assembleByContentId(base.getContentId());
+                if (doc != null) {
+                    contentSearchIndexService.indexDocument(doc);
+                }
+            }
+        } catch (Exception e) {
+            log.error("ES sync failed for contentId: {}", raw.getContentId(), e);
+            // 不抛异常，不阻断主流程
+        }
+    }
+    
+    updateSyncStatus(data.getContentId(), SyncStatus.SYNCED);
+}
+```
+
+**为什么在 triggerSync 中做而不是 sync 内部：**
+
+1. `sync()` 有 `@Transactional`，ES 调用放在里面会导致 ES 失败触发事务回滚（即使 catch 了，Spring 的 `@Transactional` 默认对 `Exception` 回滚，放在外层更安全）
+2. `triggerSync` 已有 `syncDb` / `doPostSync` 的分离职责模式，ES 写入作为第三步自然对齐
+
+### 11.3 分段说明
+
+| 步骤 | 方法 | 事务 | 失败影响 |
+|------|------|------|---------|
+| 1. MySQL 写入 | `syncDb()` → `sync()` | `@Transactional` | 全部回滚 |
+| 2. OSS 转存 | `doPostSync()` | 无事务 | 下次重试 |
+| 3. ES 索引 | `contentSearchIndexService.indexDocument()` | 无事务 | 修复任务兜底 |
+| 4. 状态更新 | `updateSyncStatus()` | 无事务 | 下次重试 |
+
+### 11.4 时序图
+
 ```
 [数仓宽表] → RawContentSyncTask
     │
     ▼
 RawContentServiceImpl.triggerSync(raw)
     │
-    ├── RawContentSyncService.sync(raw)     ← @Transactional MySQL 写入
-    │       ├── content_base (INSERT)
-    │       ├── content_text (INSERT)
-    │       ├── content_image/video (INSERT)
-    │       ├── content_metrics (INSERT)
-    │       └── content_label (INSERT)
+    ├── 1. syncDb(raw)                       ← @Transactional
+    │       └── RawContentSyncService.sync(raw)
+    │               ├── content_base (INSERT / ON DUPLICATE KEY UPDATE)
+    │               ├── content_text (INSERT, 孤儿策略)
+    │               ├── content_image/video (INSERT, 按 contentType 分流)
+    │               ├── content_metrics (INSERT / ON DUPLICATE KEY UPDATE)
+    │               └── content_label (INSERT / ON DUPLICATE KEY UPDATE)
     │
-    └── ContentSearchIndexService.index(doc)  ← ES 写入，失败不影响 MySQL
-            └── ElasticsearchDataSource.update(index, id, doc) ← UpdateRequest + upsert
+    ├── 2. doPostSync(raw)                   ← OSS 转存
+    │
+    ├── 3. [es.sync.enabled=true]            ← 开关检查
+    │       └── ContentSearchIndexService.indexDocument(doc)
+    │               ├── docAssembler.assembleByContentId(contentId)
+    │               │       └── MySQL 6 表 LEFT JOIN → ContentSearchDocument
+    │               └── ElasticsearchDataSource.update(
+    │                       "content_search_alias",
+    │                       doc.baseId.toString(),
+    │                       doc)            ← UpdateRequest + upsert
+    │
+    └── 4. updateSyncStatus(SYNCED)
 ```
 
 二次同步（仅指标更新）：
@@ -654,23 +1044,29 @@ RawContentServiceImpl.triggerSync(raw)
     ▼
 RawContentServiceImpl.triggerSync(raw)
     │
-    ├── RawContentSyncService.sync(raw)     ← MySQL 仅更新 content_metrics
+    ├── 1. syncDb(raw): content_metrics ON DUPLICATE KEY UPDATE  ← MySQL
     │
-    └── ContentSearchIndexService.update(doc) ← ES 批量更新指标
+    ├── 2. [es.sync.enabled=true]
+    │       └── ContentSearchIndexService.batchUpdateDocuments(docs)
+    │               ├── docAssembler.assembleByBaseIds(baseIds)  ← 批量 6 表 JOIN
+    │               └── ElasticsearchDataSource.bulkUpdate(
+    │                       "content_search_alias",
+    │                       updateRequests)                     ← Bulk UpdateRequest + upsert
+    │
+    └── 3. updateSyncStatus(SYNCED)
 ```
 
 ---
 
 ## 十二、边界情况处理
 
-| 场景 | 处理 |
-|------|------|
-| ES 索引不存在 | 启动时自动创建，search/update 时若抛出 `IndexNotFoundException` 则触发创建后重试 |
-| content_text 为空 | ES 文档中 `content_text` 为 null，text 字段允许 null |
-| 指标全为零 | 正常写入 ES，0 是合法值 |
-| AI 标签为空数组 | ES 中 `ai_tag` 为 `[]`，term 查询不会命中 |
-| 全量重建期间写入 | 双写策略：同时写旧索引和新索引，切换别名后停写旧索引 |
-| 并发索引同一条 | UpdateRequest 的 upsert 幂等，last write wins |
+| 场景              | 处理                                                           |
+| --------------- | ------------------------------------------------------------ |
+| ES 索引不存在        | 启动时自动创建，search/update 时若抛出 `IndexNotFoundException` 则触发创建后重试 |
+| 指标全为零           | 正常写入 ES，0 是合法值                                               |
+| AI 标签为空数组       | ES 中 `ai_tag` 为 `[]`，term 查询不会命中                             |
+| 全量重建期间写入        | 双写策略：同时写旧索引和新索引，切换别名后停写旧索引                                   |
+| 并发索引同一条         | UpdateRequest 的 upsert 幂等，last write wins                    |
 
 ---
 
