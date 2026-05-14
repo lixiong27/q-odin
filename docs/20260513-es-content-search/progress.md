@@ -61,7 +61,9 @@
 | `ElasticsearchDataSource.java` | 暴露 getRestHighLevelClient() + 新增 bulkUpdate/update/search 方法 |
 | `ContentBaseMapper.java` | 新增 7 个 ES 辅助查询方法 |
 | `ContentBaseMapper.xml` | 新增 EsDoc_Column_List + EsDocResultMap + 5 个 SELECT 查询 |
-| `RawContentServiceImpl.java` | triggerSync() 中新增 esPostSync() ES 索引同步 |
+| `RawContentService.java` | 接口新增 esPostSync() 方法 |
+| `RawContentServiceImpl.java` | triggerSync() + processItem() 中调用 esPostSync() ES 索引同步 |
+| `RawContentSyncTask.java` | processItem() 中新增 esPostSync() 调用 |
 
 ---
 
