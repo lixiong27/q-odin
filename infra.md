@@ -4,20 +4,20 @@
 
 | 组件 | 说明 | 文档 |
 |------|------|------|
-| 代码规范 | 响应对象、请求对象、Controller 模式、包结构 | [tec/coding-style.md](infra/tec/coding-style.md) |
-| QConfig | 动态配置中心（properties + JSON） | [tec/components.md](infra/tec/components.md#1-qconfig-动态配置) |
-| QSchedule | 定时任务调度 | [tec/components.md](infra/tec/components.md#2-qschedule-定时任务) |
-| Redis | 缓存、分布式锁、同步断点 | [tec/redis.md](infra/tec/redis.md) |
-| MyBatis | ORM 框架 | [tec/components.md](infra/tec/components.md#4-mybatis-mapper) |
-| JsonUtils | Jackson 封装（FAIL_ON_UNKNOWN_PROPERTIES=false） | [tec/components.md](infra/tec/components.md#5-jsonutils-工具类) |
-| HttpUtils | HTTP 客户端（QunarAsyncClient） | [tec/components.md](infra/tec/components.md#8-httputils-http客户端) |
-| Elasticsearch | 搜索引擎 7.10.2 | [tec/components.md](infra/tec/components.md#7-elasticsearch) |
-| OSS | 对象存储（qunar-oss-sdk） | [tec/components.md](infra/tec/components.md#9-oss-对象存储) |
-| QMonitor | 监控打点 | [tec/components.md](infra/tec/components.md#6-qmonitor-监控) |
+| 代码规范 | 响应对象、请求对象、Controller 模式、包结构 | [tec-coding-style.md](infra/tec-coding-style.md) |
+| QConfig | 动态配置中心（properties + JSON） | [tec-components.md](infra/tec-components.md#1-qconfig-动态配置) |
+| QSchedule | 定时任务调度 | [tec-components.md](infra/tec-components.md#2-qschedule-定时任务) |
+| Redis | 缓存、分布式锁、同步断点 | [tec-redis.md](infra/tec-redis.md) |
+| MyBatis | ORM 框架 | [tec-components.md](infra/tec-components.md#4-mybatis-mapper) |
+| JsonUtils | Jackson 封装（FAIL_ON_UNKNOWN_PROPERTIES=false） | [tec-components.md](infra/tec-components.md#5-jsonutils-工具类) |
+| HttpUtils | HTTP 客户端（QunarAsyncClient） | [tec-components.md](infra/tec-components.md#8-httputils-http客户端) |
+| Elasticsearch | 搜索引擎 7.10.2 | [tec-components.md](infra/tec-components.md#7-elasticsearch) |
+| OSS | 对象存储（qunar-oss-sdk） | [tec-components.md](infra/tec-components.md#9-oss-对象存储) |
+| QMonitor | 监控打点 | [tec-components.md](infra/tec-components.md#6-qmonitor-监控) |
 
 ## 业务模块
 
-各业务模块的详细说明（核心能力、关键文件、API、设计模式）见 [infra/modules.md](infra/modules.md)。
+各业务模块的详细说明（核心能力、关键文件、API、设计模式）见 [biz-modules.md](infra/biz-modules.md)。
 
 | 模块 | 用途 | 关键入口 |
 |------|------|---------|
@@ -75,15 +75,15 @@ MySQL + MyBatis
 
 | 场景 | 已有能力 | 接入方式 |
 |------|---------|---------|
-| 新增 CRUD 接口 | 标签管理 | 参考 [modules.md](infra/modules.md#标签管理tag-module) + [coding-style.md](infra/tec/coding-style.md) |
-| 新增 QConfig 配置 | 内容字典、原始内容同步 | properties 用 `@QConfig("xxx.properties")` + `Map` 回调；JSON 用 `@QConfig("xxx.json")` + `JsonUtils.jsonToObject()`，参考 [modules.md](infra/modules.md#内容字典content-dict) |
-| 新增定时任务 | 原始内容同步 | `@QSchedule("task_name")` + `TaskHolder.getKeeper()`，参考 [components.md](infra/tec/components.md#2-qschedule-定时任务) |
-| 新增 ES 索引 | ES 内容搜索 | `ElasticsearchDataSource` 通用操作封装，参考 [modules.md](infra/modules.md#es-内容搜索es-content-search) |
-| 新增 AI 处理管线 | 任务模块 | 继承 `AbstractTaskExecutor<P, D>` 实现 execute/subExecute，Spring 自动注册，参考 [modules.md](infra/modules.md#任务模块task-module) |
+| 新增 CRUD 接口 | 标签管理 | 参考 [biz-modules.md](infra/biz-modules.md#标签管理tag-module) + [tec-coding-style.md](infra/tec-coding-style.md) |
+| 新增 QConfig 配置 | 内容字典、原始内容同步 | properties 用 `@QConfig("xxx.properties")` + `Map` 回调；JSON 用 `@QConfig("xxx.json")` + `JsonUtils.jsonToObject()`，参考 [biz-modules.md](infra/biz-modules.md#内容字典content-dict) |
+| 新增定时任务 | 原始内容同步 | `@QSchedule("task_name")` + `TaskHolder.getKeeper()`，参考 [tec-components.md](infra/tec-components.md#2-qschedule-定时任务) |
+| 新增 ES 索引 | ES 内容搜索 | `ElasticsearchDataSource` 通用操作封装，参考 [biz-modules.md](infra/biz-modules.md#es-内容搜索es-content-search) |
+| 新增 AI 处理管线 | 任务模块 | 继承 `AbstractTaskExecutor<P, D>` 实现 execute/subExecute，Spring 自动注册，参考 [biz-modules.md](infra/biz-modules.md#任务模块task-module) |
 | 新增内容类型分析 | 任务模块 | 实现 `ContentAnalyzer` 接口，Spring 自动注入到分发 Map |
 | 新增标签回写策略 | 任务模块 | 实现 `LabelBackfillHandler` 接口，QConfig 配置切换 |
-| 新增前端字典驱动页面 | 内容检索 | `getContentDict()` + `dict?.xxx` 替换硬编码，参考 [modules.md](infra/modules.md#内容检索content-retrieval) |
+| 新增前端字典驱动页面 | 内容检索 | `getContentDict()` + `dict?.xxx` 替换硬编码，参考 [biz-modules.md](infra/biz-modules.md#内容检索content-retrieval) |
 | 新增 OSS 转存 | OSS 转存 | `OssTransferService.transfer(url)`，含 SSRF 防护 |
-| 新增 Redis 缓存 | 原始内容同步 | `RedisAsyncClient` + `odin:module:xxx` 命名，参考 [redis.md](infra/tec/redis.md) |
-| 新增 HTTP 调用 | AI 服务 | `HttpUtils.postHttp()`，超时时间走 QConfig 配置，参考 [components.md](infra/tec/components.md#8-httputils-http客户端) |
-| 新增监控打点 | 全模块 | `QMonitor.recordOne("metric_name")`，参考 [components.md](infra/tec/components.md#6-qmonitor-监控) |
+| 新增 Redis 缓存 | 原始内容同步 | `RedisAsyncClient` + `odin:module:xxx` 命名，参考 [tec-redis.md](infra/tec-redis.md) |
+| 新增 HTTP 调用 | AI 服务 | `HttpUtils.postHttp()`，超时时间走 QConfig 配置，参考 [tec-components.md](infra/tec-components.md#8-httputils-http客户端) |
+| 新增监控打点 | 全模块 | `QMonitor.recordOne("metric_name")`，参考 [tec-components.md](infra/tec-components.md#6-qmonitor-监控) |
