@@ -14,7 +14,7 @@
 
 ## 技术栈
 
-**后端：** Java 8 + Spring Boot 2.6.6 + MyBatis + QConfig + QSchedule
+**后端：** Java 17 + Spring Boot 2.6.6 + MyBatis + QConfig + QSchedule
 
 **前端：** Node 12.16.1 + React 16 + Ant Design 4.x + UmiJS 3.x
 
