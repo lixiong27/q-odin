@@ -6,7 +6,7 @@
 
 ## 目标
 
-1. 定义统一的结果信封 `SubTaskResult`，包含 `trace` / `params` / `result` 三层结构
+1. 定义统一的结果信封 `SubTaskResult`，包含 `trace` / `params` / `executeResult` 三层结构
 2. 抽象 `AbstractSubTaskExecutor` / `AbstractSimpleExecutor` 分层
 3. 各 Executor 定义具体结果 POJO，Processor 返回 POJO 而非直接调用 `completeSubTask()`
 
@@ -31,7 +31,7 @@ TaskExecutor (interface)
 {
   "trace": "SUB_1715000000000_ABCD1234",
   "params": {"contentBaseId": 1001, "configKey": "xxx"},
-  "result": {
+  "executeResult": {
     "contentType": "短视频",
     "contentTitle": "xxx",
     "aiResult": { ... }
@@ -43,7 +43,7 @@ TaskExecutor (interface)
 |------|------|------|
 | `trace` | String | 子任务编码，用于追踪 |
 | `params` | Map | 子任务参数快照 |
-| `result` | Object | 具体结果 POJO，由各 Executor 定义 |
+| `executeResult` | Object | 具体结果 POJO，由各 Executor 定义，前端仅展示此字段 |
 
 ### 各 Executor 结果 POJO
 
@@ -98,7 +98,7 @@ Processor 不再 catch 异常，直接 throw，由 `AbstractTaskExecutor.subExec
 
 ### 3. 兼容性
 
-`SubTaskResult` 信封是 additive 变更，DB 字段不变，旧数据仍可读。前端通过 `result.trace` / `result.params` / `result.result` 访问结构化字段。
+`SubTaskResult` 信封是 additive 变更，DB 字段不变，旧数据仍可读。前端通过 `parseExecuteResult()` 解包取出 `executeResult` 展示。
 
 ## 文件清单
 
@@ -131,7 +131,7 @@ Processor 不再 catch 异常，直接 throw，由 `AbstractTaskExecutor.subExec
 {
   trace: "SUB_xxx",
   params: { contentBaseId: 1001, configKey: "xxx" },
-  result: {
+  executeResult: {
     contentType: "短视频",
     contentTitle: "xxx",
     aiResult: { tags: [...], detail: {...} }
@@ -140,5 +140,5 @@ Processor 不再 catch 异常，直接 throw，由 `AbstractTaskExecutor.subExec
 ```
 
 前端 detail 页 Modal 中展示：
-- Descriptions 区域：trace、params 摘要
-- JSON 渲染区域：result.result 格式化展示
+- 通过 `parseExecuteResult()` 解包取出 `executeResult` 字段
+- JSON 渲染区域：`executeResult` 格式化展示（不含 trace / params）

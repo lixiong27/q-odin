@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频内容预览</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1677FF',
+            sidebar: '#1E293B',
+            sidebarText: '#F1F5F9',
+          },
+        },
+      }
+    }
+
+    // 格式化数字单位（K/M）
+    function formatNumber(num) {
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(2) + 'M';
+      } else if (num >= 1000) {
+        return (num / 1000).toFixed(2) + 'K';
+      } else {
+        return num.toString();
+      }
+    }
+
+    // 页面加载后初始化数字展示
+    document.addEventListener('DOMContentLoaded', function() {
+      // 示例数值：点赞1.2万=12000，评论865，收藏3.1k=3100，转发528
+      document.getElementById('likeCount').textContent = formatNumber(12000);
+      document.getElementById('commentCount').textContent = formatNumber(865);
+      document.getElementById('collectCount').textContent = formatNumber(3100);
+      document.getElementById('shareCount').textContent = formatNumber(528);
+    });
+  </script>
+  <style>
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .video-box { position: relative; padding-bottom: 56.25%; height: 0; background: #000; border-radius: 8px; overflow: hidden; }
+    .video-box video { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans h-screen overflow-hidden">
+
+<div class="flex h-full">
+  <!-- 左侧导航栏 -->
+  <aside class="w-64 bg-sidebar text-sidebarText h-full overflow-y-auto scrollbar-hide">
+    <div class="p-4 border-b border-gray-600 font-semibold text-white">社交营销系统</div>
+    <nav class="p-2 text-sm">
+      <div class="text-xs text-gray-400 px-2 py-1">基础管理</div>
+      <div class="px-2 py-1 hover:bg-primary/20 rounded">基础管理</div>
+      <div class="px-2 py-1 hover:bg-primary/20 rounded">转化承接</div>
+      <div class="px-2 py-1 hover:bg-primary/20 rounded">内容生产管理</div>
+      <div class="px-2 py-1 hover:bg-primary/20 rounded">KOC管理</div>
+      <div class="px-2 py-1 hover:bg-primary/20 rounded">投流管理</div>
+      <div class="px-2 py-1 hover:bg-primary/20 rounded">AI生产中心</div>
+      <div class="px-2 py-1 hover:bg-primary/20 rounded">内容审核</div>
+      <div class="px-2 py-1 hover:bg-primary/20 rounded">生产策略管理</div>
+
+      <div class="text-xs text-gray-400 px-2 py-1 mt-4">内容中台</div>
+      <div class="px-3 py-2 bg-primary/30 rounded text-white flex items-center">
+        <i class="fa fa-database mr-2"></i>内容库
+      </div>
+      <div class="px-3 py-2 hover:bg-primary/20 rounded flex items-center">
+        <i class="fa fa-tags mr-2"></i>标签管理
+      </div>
+    </nav>
+  </aside>
+
+  <!-- 右侧内容区 -->
+  <div class="flex-1 flex flex-col overflow-y-auto">
+    <div class="h-14 bg-white border-b flex items-center px-4">
+      <button onclick="window.close()" class="flex items-center text-sm hover:text-primary">
+        <i class="fa fa-arrow-left mr-1"></i>返回列表
+      </button>
+      <div class="ml-4 font-medium">视频内容预览</div>
+    </div>
+
+    <div class="p-6 max-w-5xl mx-auto w-full">
+      <div class="bg-white rounded-lg shadow p-6">
+
+        <!-- 视频播放区 -->
+        <div class="video-box mb-6">
+          <video controls poster="https://picsum.photos/1280/720?random=100">
+            <source src="https://www.w3school.com.cn/i/movie.mp4" type="video/mp4">
+            您的浏览器不支持视频播放
+          </video>
+        </div>
+
+        <!-- 视频标题 -->
+        <div class="text-lg font-medium mb-3">
+          广西自驾游合那高速，沿途风景绝美，被称为中国最美高速！
+        </div>
+
+        <!-- 互动数据：点赞、评论、收藏、转发 -->
+        <div class="flex items-center gap-6 text-sm text-gray-600 mb-6">
+          <div class="flex items-center gap-1">
+            <i class="fa fa-thumbs-up text-primary"></i>
+            <span>点赞 <span id="likeCount">0</span></span>
+          </div>
+          <div class="flex items-center gap-1">
+            <i class="fa fa-comment"></i>
+            <span>评论 <span id="commentCount">0</span></span>
+          </div>
+          <div class="flex items-center gap-1">
+            <i class="fa fa-star"></i>
+            <span>收藏 <span id="collectCount">0</span></span>
+          </div>
+          <div class="flex items-center gap-1">
+            <i class="fa fa-share-alt"></i>
+            <span>转发 <span id="shareCount">0</span></span>
+          </div>
+        </div>
+
+        <!-- 基础信息 -->
+        <div class="bg-gray-50 p-4 rounded border mb-6 grid grid-cols-2 gap-3 text-sm">
+          <div><span class="text-gray-500">内容ID：</span>1012</div>
+          <div><span class="text-gray-500">业务内容ID：</span>BN1012001</div>
+          <div><span class="text-gray-500">发布平台：</span>小红书</div>
+          <div><span class="text-gray-500">发布时间：</span>2026-04-10</div>
+          <div><span class="text-gray-500">内容来源：</span>短视频团队</div>
+        </div>
+
+        <!-- 按钮 -->
+        <div class="flex justify-end gap-3">
+          <button onclick="window.close()" class="border px-4 py-2 rounded text-sm">关闭预览</button>
+          <button class="bg-primary text-white px-4 py-2 rounded text-sm hover:bg-primary/90">
+            <i class="fa fa-download mr-1"></i>下载视频
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

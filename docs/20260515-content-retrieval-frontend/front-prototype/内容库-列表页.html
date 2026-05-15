@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>社交营销系统 - 内容库</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1677FF',
+            sidebar: '#1E293B',
+            sidebarActive: '#1677FF',
+            sidebarText: '#F1F5F9',
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .tag-tree-level-1 { @apply pl-2 py-1 hover:bg-gray-100 cursor-pointer text-sm rounded; }
+      .tag-tree-level-2 { @apply pl-6 py-1 hover:bg-gray-100 cursor-pointer text-sm rounded; }
+      .tag-tree-level-3 { @apply pl-10 py-1 hover:bg-gray-100 cursor-pointer text-sm rounded; }
+      .tag-item { @apply inline-flex items-center bg-blue-50 text-primary px-2 py-1 rounded text-xs mr-2 mb-2; }
+      .tag-remove { @apply ml-1 cursor-pointer hover:text-red-500; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased overflow-hidden h-screen">
+<div class="flex h-full">
+  <aside class="w-64 bg-sidebar text-sidebarText flex-shrink-0 h-full overflow-y-auto scrollbar-hide">
+    <div class="p-4 border-b border-gray-600">
+      <span class="font-semibold text-white text-lg">社交营销系统</span>
+    </div>
+    <nav class="p-2">
+      <div class="mb-1 px-2 py-1 text-xs text-gray-400">基础管理</div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>基础管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>转化承接</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>内容生产管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>KOC管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>投流管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>AI生产中心</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>内容审核</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>生产策略管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+
+      <div class="mt-4 mb-1 px-2 py-1 text-xs text-gray-400">内容中台</div>
+      <div class="mb-1 px-3 py-2 flex items-center rounded bg-sidebarActive/30 text-white">
+        <i class="fa fa-database mr-2"></i><span>内容库</span>
+      </div>
+      <div class="mb-1 px-3 py-2 flex items-center hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <i class="fa fa-tags mr-2"></i><span>标签管理</span>
+      </div>
+    </nav>
+  </aside>
+
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header class="h-14 border-b border-gray-200 bg-white flex items-center justify-between px-4">
+      <div class="text-lg font-medium">内容库</div>
+      <div class="flex items-center space-x-3">
+        <span class="text-sm">管理员</span>
+        <div class="w-8 h-8 rounded-full bg-gray-200"></div>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4">
+      <div class="bg-white rounded shadow p-4 mb-4">
+        <div class="mb-4">
+          <div class="font-medium text-sm mb-2">基础信息</div>
+          <div class="grid grid-cols-3 gap-3 mb-3">
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">内容来源</label>
+              <select class="w-full border border-gray-300 rounded h-9 px-2 text-sm">
+                <option value="">请选择内容来源</option>
+                <option>信息流团队</option><option>小红书团队</option><option>短视频团队</option><option>达人运营</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">发布平台</label>
+              <select class="w-full border border-gray-300 rounded h-9 px-2 text-sm">
+                <option value="">请选择发布平台</option>
+                <option>小红书</option><option>抖音</option><option>视频号</option><option>快手</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">内容形式</label>
+              <select class="w-full border border-gray-300 rounded h-9 px-2 text-sm">
+                <option value="">请选择内容形式</option><option>视频</option><option>图文</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">业务线</label>
+              <select class="w-full border border-gray-300 rounded h-9 px-2 text-sm">
+                <option value="">请选择业务线</option><option>酒店</option><option>国际酒店</option><option>火车</option><option>门票</option><option>...</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">发布时间</label>
+              <div class="flex gap-1 items-center">
+                <input type="date" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="text-xs">-</span>
+                <input type="date" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">地理信息（城市/POI）</label>
+              <input type="text" placeholder="城市/POI 搜索" class="w-full border border-gray-300 rounded h-9 px-2 text-sm">
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="font-medium text-sm mb-2">标签</div>
+          <div class="relative w-full">
+            <input type="text" placeholder="请搜索或选择标签" class="w-full border border-gray-300 rounded h-9 px-3 text-sm">
+            <div class="absolute right-2 top-2 text-gray-400"><i class="fa fa-caret-down"></i></div>
+            <div class="hidden absolute left-0 top-10 w-full bg-white border border-gray-300 rounded shadow z-50 max-h-60 overflow-y-auto p-2" id="tagTree">
+              <div class="tag-tree-level-1"><input type="checkbox" class="mr-2"> 内容类型</div>
+              <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 攻略</div>
+              <div class="tag-tree-level-3"><input type="checkbox" class="mr-2"> 路线攻略</div>
+              <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 资讯</div>
+              <div class="tag-tree-level-1"><input type="checkbox" class="mr-2"> ...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="font-medium text-sm mb-2">数据指标</div>
+          <div class="grid grid-cols-3 gap-3 mb-3">
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">曝光量</label>
+              <div class="flex gap-1 items-center">
+                <input placeholder="最小值" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="px-1">-</span>
+                <input placeholder="最大值" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">点击率(CTR) %</label>
+              <div class="flex gap-1 items-center">
+                <input placeholder="最小值" class="w-[35%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="px-1">-</span>
+                <input placeholder="最大值" class="w-[35%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="text-xs">%</span>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">转化率(CVR) %</label>
+              <div class="flex gap-1 items-center">
+                <input placeholder="最小值" class="w-[35%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="px-1">-</span>
+                <input placeholder="最大值" class="w-[35%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="text-xs">%</span>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">订单量</label>
+              <div class="flex gap-1 items-center">
+                <input placeholder="最小值" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="px-1">-</span>
+                <input placeholder="最大值" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">归一新客量</label>
+              <div class="flex gap-1 items-center">
+                <input placeholder="最小值" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="px-1">-</span>
+                <input placeholder="最大值" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">归一新客CAC</label>
+              <div class="flex gap-1 items-center">
+                <input placeholder="最小值" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+                <span class="px-1">-</span>
+                <input placeholder="最大值" class="w-[40%] border border-gray-300 rounded h-9 px-2 text-sm">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-2">
+          <button class="px-4 h-9 border border-gray-300 rounded text-sm">清空</button>
+          <button class="px-4 h-9 bg-primary text-white rounded text-sm">搜索</button>
+          <button id="savePreset" class="px-4 h-9 bg-green-600 text-white rounded text-sm">
+            <i class="fa fa-save mr-1"></i>保存预设
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded shadow p-3 mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-sm">自定义排序：</span>
+          <select id="sortField" class="border border-gray-300 rounded h-8 px-2 text-sm">
+            <option>请选择数据指标</option>
+            <option>曝光量</option>
+            <option>CTR</option>
+            <option>CVR</option>
+            <option>...</option>
+          </select>
+          <select id="sortOrder" class="border border-gray-300 rounded h-8 px-2 text-sm">
+            <option>由高到低</option>
+            <option>由低到高</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button id="openCustom" class="px-3 h-8 border border-gray-300 rounded text-sm"><i class="fa fa-columns mr-1"></i>自定义列</button>
+          <button class="px-3 h-8 border border-gray-300 rounded text-sm"><i class="fa fa-download mr-1"></i>批量下载</button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded shadow overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b">
+              <th class="p-3 text-left w-10"><input type="checkbox" id="checkAll"></th>
+              <th class="p-3 text-left">内容ID</th>
+              <th class="p-3 text-left">内容</th>
+              <th class="p-3 text-left">内容来源</th>
+              <th class="p-3 text-left">内容形式</th>
+              <th class="p-3 text-left">发布平台</th>
+              <th class="p-3 text-left">发布时间</th>
+              <th class="p-3 text-left">下载次数</th>
+              <th class="p-3 text-left">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b">
+              <td class="p-3"><input type="checkbox" class="itemCheck"></td>
+              <td class="p-3">1012</td>
+              <td class="p-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden relative">
+                    <img src="https://picsum.photos/200/200?random=1" class="w-full h-full object-cover">
+                    <div class="absolute bottom-0 right-0 bg-black/60 text-white text-xs px-1">01:40</div>
+                    <i class="fa fa-play absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl bg-black/40 p-3 rounded-full"></i>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium">广西自驾游合那高速</div>
+                    <div class="text-xs text-gray-500">中国最美高速</div>
+                  </div>
+                </div>
+              </td>
+              <td class="p-3">短视频团队</td>
+              <td class="p-3">视频</td>
+              <td class="p-3">
+                小红书
+                <div class="mt-1">
+                  <button onclick="viewLink('1012')" class="text-primary text-xs underline">查看链接</button>
+                </div>
+              </td>
+              <td class="p-3">2026-04-10</td>
+              <td class="p-3">156</td>
+              <td class="p-3">
+                <button onclick="window.open('/detail?id=1012&type=video','_blank')" class="text-primary mr-2">查看详情</button>
+                <button onclick="editTags('1012')" class="text-blue-600 mr-2">编辑</button>
+                <button class="text-gray-600">下载</button>
+              </td>
+            </tr>
+            <tr class="border-b">
+              <td class="p-3"><input type="checkbox" class="itemCheck"></td>
+              <td class="p-3">1011</td>
+              <td class="p-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+                    <img src="https://picsum.photos/200/200?random=2" class="w-full h-full object-cover">
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium">杭州西湖五星酒店</div>
+                    <div class="text-xs text-gray-500">涌金广场店</div>
+                  </div>
+                </div>
+              </td>
+              <td class="p-3">小红书团队</td>
+              <td class="p-3">图文</td>
+              <td class="p-3">
+                小红书
+                <div class="mt-1">
+                  <button onclick="viewLink('1011')" class="text-primary text-xs underline">查看链接</button>
+                </div>
+              </td>
+              <td class="p-3">2026-04-08</td>
+              <td class="p-3">89</td>
+              <td class="p-3">
+                <button onclick="window.open('/detail?id=1011&type=image','_blank')" class="text-primary mr-2">查看详情</button>
+                <button onclick="editTags('1011')" class="text-blue-600 mr-2">编辑</button>
+                <button class="text-gray-600">下载</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- 自定义列弹窗 -->
+  <div id="customModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+    <div class="bg-white w-[680px] rounded shadow-lg">
+      <div class="p-4 border-b flex justify-between items-center">
+        <div class="font-medium">自定义列配置</div>
+        <button onclick="closeCustom()" class="text-gray-400"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="p-4 max-h-[500px] overflow-y-auto">
+        <div class="mb-4">
+          <div class="font-medium text-sm mb-2">基础信息</div>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="text-sm"><input type="checkbox"> 生产方式</label>
+            <label class="text-sm"><input type="checkbox"> 运营项目</label>
+            <label class="text-sm"><input type="checkbox"> 投放团队/代理名称</label>
+            <label class="text-sm"><input type="checkbox"> 投放位置</label>
+            <label class="text-sm"><input type="checkbox"> 城市POI</label>
+            <label class="text-sm"><input type="checkbox"> 业务线</label>
+            <label class="text-sm"><input type="checkbox"> 业务内容ID</label>
+            <label class="text-sm"><input type="checkbox"> 是否有版权</label>
+          </div>
+        </div>
+        <div class="mb-4">
+          <div class="font-medium text-sm mb-2">标签</div>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="text-sm"><input type="checkbox"> 内容标签</label>
+            <label class="text-sm"><input type="checkbox"> 运营标签</label>
+          </div>
+        </div>
+        <div>
+          <div class="font-medium text-sm mb-2">数据指标</div>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="text-sm"><input type="checkbox"> 累计曝光量</label>
+            <label class="text-sm"><input type="checkbox"> 累计阅读量</label>
+            <label class="text-sm"><input type="checkbox"> 完播率</label>
+            <label class="text-sm"><input type="checkbox"> 5s完播率</label>
+            <label class="text-sm"><input type="checkbox"> 3s完播率</label>
+            <label class="text-sm"><input type="checkbox"> 累计互动量</label>
+            <label class="text-sm"><input type="checkbox"> 千次曝光成本（CPM）</label>
+            <label class="text-sm"><input type="checkbox"> 点击率（CTR）</label>
+            <label class="text-sm"><input type="checkbox"> 转化率（CVR）</label>
+            <label class="text-sm"><input type="checkbox"> 引流UV</label>
+            <label class="text-sm"><input type="checkbox"> 阅读引流比</label>
+            <label class="text-sm"><input type="checkbox"> 潜新UV</label>
+            <label class="text-sm"><input type="checkbox"> 潜新CAC</label>
+            <label class="text-sm"><input type="checkbox"> 归一新客量</label>
+            <label class="text-sm"><input type="checkbox"> 新客CAC</label>
+            <label class="text-sm"><input type="checkbox"> 累计下单UV</label>
+            <label class="text-sm"><input type="checkbox"> 累计订单量</label>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 border-t flex justify-end gap-2">
+        <button onclick="closeCustom()" class="px-4 h-9 border">取消</button>
+        <button onclick="closeCustom()" class="px-4 h-9 bg-primary text-white">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑标签弹窗 -->
+  <div id="editTagModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+    <div class="bg-white w-[680px] rounded shadow-lg">
+      <div class="p-4 border-b flex justify-between items-center">
+        <div class="font-medium">编辑标签</div>
+        <button onclick="closeEditTag()" class="text-gray-400"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="mb-4">
+          <div class="font-medium text-sm mb-2">已选标签</div>
+          <div id="selectedTags" class="flex flex-wrap">
+            <div class="tag-item">
+              路线攻略 <i class="fa fa-times tag-remove" onclick="removeTag(this)"></i>
+            </div>
+            <div class="tag-item">
+              旅游 <i class="fa fa-times tag-remove" onclick="removeTag(this)"></i>
+            </div>
+          </div>
+        </div>
+        <div class="mb-4">
+          <div class="font-medium text-sm mb-2">选择标签</div>
+          <div class="relative w-full mb-3">
+            <input type="text" placeholder="请搜索或选择标签" class="w-full border border-gray-300 rounded h-9 px-3 text-sm">
+            <div class="absolute right-2 top-2 text-gray-400"><i class="fa fa-caret-down"></i></div>
+          </div>
+          <div class="max-h-[300px] overflow-y-auto border border-gray-300 rounded p-2">
+            <div class="tag-tree-level-1"><input type="checkbox" class="mr-2"> 内容类型</div>
+            <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 攻略</div>
+            <div class="tag-tree-level-3"><input type="checkbox" class="mr-2"> 路线攻略</div>
+            <div class="tag-tree-level-3"><input type="checkbox" class="mr-2"> 美食攻略</div>
+            <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 资讯</div>
+            <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 测评</div>
+            <div class="tag-tree-level-1"><input type="checkbox" class="mr-2"> 行业</div>
+            <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 旅游</div>
+            <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 酒店</div>
+            <div class="tag-tree-level-1"><input type="checkbox" class="mr-2"> 场景</div>
+            <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 自驾游</div>
+            <div class="tag-tree-level-2"><input type="checkbox" class="mr-2"> 亲子游</div>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 border-t flex justify-end gap-2">
+        <button onclick="closeEditTag()" class="px-4 h-9 border">取消</button>
+        <button onclick="saveTags()" class="px-4 h-9 bg-primary text-white">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 查看链接弹窗 -->
+  <div id="linkModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+    <div class="bg-white w-[500px] rounded shadow-lg">
+      <div class="p-4 border-b flex justify-between items-center">
+        <div class="font-medium">发布链接</div>
+        <button onclick="closeLinkModal()" class="text-gray-400"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="p-4">
+        <div class="mb-2 text-sm text-gray-600">内容ID: <span id="linkContentId"></span></div>
+        <div class="mb-3">
+          <label class="text-xs text-gray-500 block mb-1">发布链接</label>
+          <input type="text" id="contentLink" readonly class="w-full border border-gray-300 rounded h-9 px-3 text-sm bg-gray-50">
+        </div>
+        <button onclick="copyLink()" class="px-4 h-9 bg-primary text-white rounded text-sm">
+          <i class="fa fa-copy mr-1"></i>复制链接
+        </button>
+      </div>
+      <div class="p-4 border-t flex justify-end">
+        <button onclick="closeLinkModal()" class="px-4 h-9 border">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 全选
+    document.getElementById('checkAll').onchange = e => {
+      document.querySelectorAll('.itemCheck').forEach(i => i.checked = e.target.checked);
+    };
+
+    // 标签下拉
+    document.querySelector('input[placeholder="请搜索或选择标签"]').onclick = () => {
+      document.getElementById('tagTree').classList.toggle('hidden');
+    };
+
+    // 自定义列
+    function openCustom(){document.getElementById('customModal').classList.remove('hidden');}
+    function closeCustom(){document.getElementById('customModal').classList.add('hidden');}
+    document.getElementById('openCustom').onclick = openCustom;
+
+    // 保存预设
+    document.getElementById('savePreset').onclick = () => {
+      const data = {
+        filters: {
+          source: document.querySelector('select').value,
+          platform: document.querySelectorAll('select')[1].value,
+          type: document.querySelectorAll('select')[2].value,
+          business: document.querySelectorAll('select')[3].value,
+        },
+        sort: {
+          field: document.getElementById('sortField').value,
+          order: document.getElementById('sortOrder').value
+        }
+      };
+      localStorage.setItem('contentPreset', JSON.stringify(data));
+      alert('预设保存成功！');
+    };
+
+    // 加载预设
+    window.onload = () => {
+      const preset = localStorage.getItem('contentPreset');
+      if(preset){
+        const data = JSON.parse(preset);
+        document.querySelector('select').value = data.filters.source || '';
+        document.querySelectorAll('select')[1].value = data.filters.platform || '';
+        document.querySelectorAll('select')[2].value = data.filters.type || '';
+        document.querySelectorAll('select')[3].value = data.filters.business || '';
+        document.getElementById('sortField').value = data.sort.field || '';
+        document.getElementById('sortOrder').value = data.sort.order || '';
+      }
+    };
+
+    // 编辑标签
+    function editTags(contentId) {
+      document.getElementById('editTagModal').classList.remove('hidden');
+    }
+    function closeEditTag() {
+      document.getElementById('editTagModal').classList.add('hidden');
+    }
+    function saveTags() {
+      alert('标签保存成功！');
+      closeEditTag();
+    }
+    function removeTag(el) {
+      el.parentElement.remove();
+    }
+
+    // 查看链接
+    function viewLink(contentId) {
+      document.getElementById('linkContentId').textContent = contentId;
+      const linkMap = {
+        '1012': 'https://xiaohongshu.com/notes/1012-guangxi-travel',
+        '1011': 'https://xiaohongshu.com/notes/1011-hangzhou-hotel'
+      };
+      document.getElementById('contentLink').value = linkMap[contentId] || '';
+      document.getElementById('linkModal').classList.remove('hidden');
+    }
+    function closeLinkModal() {
+      document.getElementById('linkModal').classList.add('hidden');
+    }
+    function copyLink() {
+      const input = document.getElementById('contentLink');
+      input.select();
+      document.execCommand('copy');
+      alert('链接已复制');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>内容详情</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1677FF',
+            sidebar: '#1E293B',
+            sidebarActive: '#1677FF',
+            sidebarText: '#F1F5F9',
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans h-screen overflow-hidden">
+
+<div class="flex h-full">
+  <!-- 左侧导航栏（完整保留） -->
+  <aside class="w-64 bg-sidebar text-sidebarText flex-shrink-0 h-full overflow-y-auto scrollbar-hide">
+    <div class="p-4 border-b border-gray-600">
+      <span class="font-semibold text-white text-lg">社交营销系统</span>
+    </div>
+    <nav class="p-2">
+      <div class="mb-1 px-2 py-1 text-xs text-gray-400">基础管理</div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>基础管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>转化承接</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>内容生产管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>KOC管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>投流管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>AI生产中心</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>内容审核</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+      <div class="mb-1 px-2 py-1 flex items-center justify-between hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <span>生产策略管理</span><i class="fa fa-angle-right text-gray-400"></i>
+      </div>
+
+      <div class="mt-4 mb-1 px-2 py-1 text-xs text-gray-400">内容中台</div>
+      <div class="mb-1 px-3 py-2 flex items-center rounded bg-sidebarActive/30 text-white">
+        <i class="fa fa-database mr-2"></i><span>内容库</span>
+      </div>
+      <div class="mb-1 px-3 py-2 flex items-center hover:bg-sidebarActive/20 rounded cursor-pointer">
+        <i class="fa fa-tags mr-2"></i><span>标签管理</span>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- 右侧内容区 -->
+  <div class="flex-1 flex flex-col overflow-y-auto">
+    <!-- 顶部栏：返回 + 标题 -->
+    <div class="h-14 bg-white border-b flex items-center px-4 sticky top-0 z-10">
+      <button onclick="window.close()" class="flex items-center text-sm text-gray-700 hover:text-primary">
+        <i class="fa fa-arrow-left mr-1"></i>返回列表
+      </button>
+      <div class="ml-4 font-medium">内容详情</div>
+    </div>
+
+    <!-- 详情内容 -->
+    <div class="p-6 max-w-6xl mx-auto w-full">
+      <div class="bg-white rounded-lg shadow p-6">
+
+        <!-- 1. 最上方：内容图片 + 标题 -->
+        <div class="mb-8">
+          <img src="https://picsum.photos/800/450?random=10" class="w-full rounded object-cover mb-4">
+          <div class="text-lg font-medium text-gray-800">
+            广西自驾游合那高速，沿途风景绝美，被称为中国最美高速！
+          </div>
+        </div>
+
+        <!-- 2. 基础信息（左） + 数据指标（右） -->
+        <div class="flex gap-8 mb-8">
+          <!-- 左：基础信息 -->
+          <div class="w-1/2 bg-gray-50 p-5 rounded border">
+            <div class="font-medium mb-3 text-gray-700">基础信息</div>
+            <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <div><span class="text-gray-500">内容ID：</span>1012</div>
+              <div><span class="text-gray-500">业务内容ID：</span>BN20260410001</div>
+              <div><span class="text-gray-500">内容形式：</span>视频</div>
+              <div><span class="text-gray-500">发布平台：</span>小红书</div>
+              <div><span class="text-gray-500">发布时间：</span>2026-04-10</div>
+              <div><span class="text-gray-500">业务线：</span>旅游</div>
+              <div><span class="text-gray-500">城市/POI：</span>广西·合那高速</div>
+              <div><span class="text-gray-500">内容来源：</span>短视频团队</div>
+              <div><span class="text-gray-500">生产方式：</span>自制</div>
+              <div><span class="text-gray-500">运营项目：</span>广西旅游推广</div>
+              <div><span class="text-gray-500">生产归属团队/投放团队/代理名称：</span>直营投放</div>
+              <div><span class="text-gray-500">投放位置：</span>信息流推荐</div>
+              <div><span class="text-gray-500">是否有版权：</span>有</div>
+            </div>
+          </div>
+
+          <!-- 右：数据指标 -->
+          <div class="w-1/2 bg-gray-50 p-5 rounded border">
+            <div class="font-medium mb-3 text-gray-700">数据指标</div>
+            <!-- 视频格式数据指标 -->
+            <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <div><span class="text-gray-500">曝光量：</span>120.0 万</div>
+              <div><span class="text-gray-500">完播率：</span>65.2 %</div>
+              <div><span class="text-gray-500">5s完播率：</span>82.5 %</div>
+              <div><span class="text-gray-500">3s完播率：</span>88.7 %</div>
+              <div><span class="text-gray-500">互动量：</span>18.2 万</div>
+              <div><span class="text-gray-500">千次曝光成本（CPM）：</span>32.5 元</div>
+              <div><span class="text-gray-500">点击率（CTR）：</span>8.65 %</div>
+              <div><span class="text-gray-500">转化率（CVR）：</span>3.21 %</div>
+              <div><span class="text-gray-500">引流UV：</span>6.8 万</div>
+              <div><span class="text-gray-500">阅读/曝光引流比：</span>12.8 %</div>
+              <div><span class="text-gray-500">潜新UV：</span>5.6 万</div>
+              <div><span class="text-gray-500">潜新CAC：</span>45.0 元</div>
+              <div><span class="text-gray-500">归一新客量：</span>189</div>
+              <div><span class="text-gray-500">新客CAC：</span>68.0 元</div>
+              <div><span class="text-gray-500">累计下单UV：</span>212</div>
+              <div><span class="text-gray-500">累计订单量：</span>235</div>
+            </div>
+
+            <!-- 图文格式数据指标（注释掉，如需切换可取消注释并注释视频部分）
+            <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <div><span class="text-gray-500">曝光量：</span>120.0 万</div>
+              <div><span class="text-gray-500">阅读量：</span>98.5 万</div>
+              <div><span class="text-gray-500">互动量：</span>18.2 万</div>
+              <div><span class="text-gray-500">千次曝光成本（CPM）：</span>32.5 元</div>
+              <div><span class="text-gray-500">点击率（CTR）：</span>8.65 %</div>
+              <div><span class="text-gray-500">转化率（CVR）：</span>3.21 %</div>
+              <div><span class="text-gray-500">引流UV：</span>6.8 万</div>
+              <div><span class="text-gray-500">阅读/曝光引流比：</span>12.8 %</div>
+              <div><span class="text-gray-500">潜新UV：</span>5.6 万</div>
+              <div><span class="text-gray-500">潜新CAC：</span>45.0 元</div>
+              <div><span class="text-gray-500">归一新客量：</span>189</div>
+              <div><span class="text-gray-500">新客CAC：</span>68.0 元</div>
+              <div><span class="text-gray-500">累计下单UV：</span>212</div>
+              <div><span class="text-gray-500">累计订单量：</span>235</div>
+            </div>
+            -->
+          </div>
+        </div>
+
+        <!-- 3. 标签信息（分两行展示） -->
+        <div class="bg-gray-50 p-5 rounded border">
+          <div class="font-medium mb-3 text-gray-700">标签信息</div>
+          <div class="space-y-2">
+            <!-- 第一行：内容标签 -->
+            <div class="text-sm">
+              <span class="text-gray-500 inline-block w-16">内容标签：</span>
+              <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">旅游攻略</span>
+            </div>
+            <!-- 第二行：运营标签 -->
+            <div class="text-sm">
+              <span class="text-gray-500 inline-block w-16">运营标签：</span>
+              <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">自驾游</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

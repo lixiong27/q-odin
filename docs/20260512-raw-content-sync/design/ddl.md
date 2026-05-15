@@ -144,9 +144,10 @@ CREATE TABLE `content_metrics` (
 
     -- 扩展与审计
     `ext_param`                   VARCHAR(3000) NOT NULL DEFAULT '{}' COMMENT '扩展参数JSON',
+      `total_downloads` INT NOT NULL DEFAULT 0 COMMENT '内容累计下载次数',
     `create_time`                 DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`                 DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-
+ 
     PRIMARY KEY (`id`),
     UNIQUE KEY `uniq_base_id` (`base_id`),
     KEY `idx_total_impressions` (`total_impressions`),
