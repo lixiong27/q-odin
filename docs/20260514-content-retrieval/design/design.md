@@ -278,7 +278,7 @@ SearchRouter 返回 (baseIds, total) → DataAggregator.aggregate(baseIds):
 
 **不复写 SQL，不重复造轮子。** DataAggregator 直接调用已有 DocAssembler 的批量查询方法。
 
-> **注意：** 当前 `EsDoc_Column_List`（ContentBaseMapper.xml:72）和 `EsDocResultMap`（ContentBaseMapper.xml:110）缺少 `cb.content_title` 和 `cb.publish_url` 两列。使用前需先在 Mapper XML 中追加这两列和对应映射，否则 DataAggregator 返回的数据没有标题和链接。详见第十四章（深潜差距）。
+> **注意：** ES 索引不存储 `content_title` / `publish_url`，这两个字段仅在 MySQL `content_base` 表中。DataAggregator 拿到 `baseId` 后，需额外调用 `ContentBaseMapper.selectById()`（`Base_Column_List`）补上标题和链接。详见第十四章（深潜差距）。
 
 ### 5.2 assembleByBaseIds 已有实现
 
@@ -886,10 +886,7 @@ RetrieveController (web/retrieve/)
 
 **验证过程：** `ContentSearchDocAssemblerImpl.mapToDocument()` 从 MySQL row Map 取值（Map 的 key 是 MyBatis resultMap 定义的 property，如 `contentId`），但 `EsDoc_Column_List`（ContentBaseMapper.xml:72-108）**没有 SELECT `cb.content_title` 和 `cb.publish_url`**，`EsDocResultMap`（ContentBaseMapper.xml:110-146）也没有对应的 `<result>` 映射。所以当前 DocAssembler 返回的 `ContentSearchDocument` 也没有标题。
 
-**影响：**
-- 当前搜索 API 返回的命中结果**没有标题和链接**，前端无法展示内容标题
-- **设计文档假设 ES 搜索后需要 DataAggregator 回查 MySQL**，这正是原因
-- DataAggregator 复用 DocAssembler 走 3 表 LEFT JOIN 时，需要**先在 `EsDoc_Column_List` 中加入 `cb.content_title`、`cb.publish_url`**，否则聚合结果也没有标题
+**决策：** content_title / publish_url 不加入 ES 索引 mapping，也不加入 `EsDoc_Column_List`。DataAggregator 拿到 baseId 后，通过 `ContentBaseMapper.selectById()`（`Base_Column_List`）单独回查 content_base 补上标题和链接。这是合理的分离——ES 只存搜索所需的索引字段，展示层字段由聚合模块组装。
 
 ### 14.3 ContentSearchDocument / ContentSearchHit 缺少 contentTitle + publishUrl
 
@@ -900,23 +897,7 @@ RetrieveController (web/retrieve/)
 | `ContentSearchHit` | yes | **no** | **no** |
 | `ContentSearchDocument` | yes | **no** | **no** |
 
-**修正方案：** 在 `ContentSearchDocument` 中新增 2 个字段，并更新相应的 Mapper XML：
-
-```java
-// ContentSearchDocument.java — 新增字段
-private String contentTitle;
-private String publishUrl;
-
-// Mapper XML — EsDoc_Column_List 追加
-//     cb.content_title,
-//     cb.publish_url,
-
-// Mapper XML — EsDocResultMap 追加映射
-//     <result column="content_title" property="contentTitle" jdbcType="VARCHAR"/>
-//     <result column="publish_url" property="publishUrl" jdbcType="VARCHAR"/>
-```
-
-`ContentSearchHit` 可以保持现状（它是 ES 直接返回的 DTO，新架构中由 ResponseAssembler 从 Document 转换而来）。
+**决策：** 这两个字段不加入 ES 索引 mapping，也不加入 `ContentSearchDocument` / `ContentSearchHit`。DataAggregator 在聚合阶段通过 `ContentBaseMapper.selectById()` 单独回查 `content_base` 表补上标题和链接。`ContentSearchDocument` 作为 ES 文档 POJO 保持与 ES mapping 一致，展示层额外字段由聚合模块负责组装。
 
 ### 14.4 ContentBaseMapper 缺少单表过滤查询
 
@@ -1070,11 +1051,10 @@ result.setTook(response.getTook() != null ? (int) response.getTook().getSeconds(
 | 优先级 | 改动 | 涉及文件 | 工作量 | 验证状态 |
 |--------|------|---------|--------|---------|
 | **P0** | ContentSearchRequest 新增 5 个字段（不含 keyword） | `ContentSearchRequest.java` | 小 | 确认缺少 |
-| **P0** | Mapper EsDoc_Column_List + EsDocResultMap 补充 | `ContentBaseMapper.xml` | 小 | 确认缺少 |
-| **P0** | ContentSearchDocument 新增 contentTitle + publishUrl | `ContentSearchDocument.java` | 小 | 确认缺少 |
 | **P0** | ContentBaseMapper 新增单表查询/计数 | `ContentBaseMapper.java` + XML | 中 | 确认缺少 |
 | **P0** | ContentTextMapper 新增 selectBatchByIds | `ContentTextMapper.java` + XML | 小 | 确认缺少 |
 | **P0** | ContentImage/VideoMapper 新增 selectBatchByIds | Mapper + XML | 小 | 确认缺少 |
+| **P0** | DataAggregator 回查 content_base 补标题/链接 | `ContentDataAggregator.java` | 小 | 设计决策 |
 | **P1** | Controller 改为 BaseResponse 包装 | `ContentSearchController.java` | 小 | 确认未包装 |
 | **P1** | 新增 ESSearchService 用 filter() 替代 must() | 新文件 | 中 | 确认现有用 must() |
 | **P2** | took 单位改为毫秒 | `ContentSearchServiceImpl.java` | 极小 | 建议优化 |
