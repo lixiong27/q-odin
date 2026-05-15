@@ -84,6 +84,15 @@
 - **检索模块核心开发全部完成**（12 个文件：Orchestrator、Router、Aggregator、Security、Track、Assembler、Controller、ValidationFilter、Config）
 - **内容下载打包全部完成**（5 个文件：DownloadService、Controller、SecurityFilter、DomainConfig、DownloadResult + WebFilterConfig）
 
+**已完成：**
+- 内容库列表页（搜索、筛选、排序、分页、自定义列、预设、高级筛选）
+- 内容详情页（基本信息、内容预览、标签编辑、数据指标）
+- **TagTreeSelector 组件** — 动态标签树选择器，替代硬编码 AI_TAG_OPTIONS
+- **后端字典系统** — ContentDictConfig + ContentDictService(QConfig) + /api/content/dict 端点
+- **ContentResponseAssembler 重构** — 静态 FIELD_META 替换为字典驱动
+- **list.jsx 字典集成** — 所有硬编码常量替换为 dict 驱动（内容类型、平台、业务线、排序、指标筛选、列配置、建议字段 AutoComplete）
+- **detail.jsx 字典集成** — FIELD_LABEL/METRIC_GROUPS 替换为 dict 驱动，AI标签编辑改用 TagTreeSelector
+
 **待开始：**
 - 联调测试
 
