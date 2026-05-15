@@ -20,21 +20,13 @@
 
 ## Git 提交规范
 
-**仓库结构：**
-- 外部仓库: `q-odin/`
-- 后端仓库: `odin_server/`
-- 前端仓库: `odin_node/`
+**仓库结构：** 外部 `q-odin/` / 后端 `odin_server/` / 前端 `odin_node/`
 
-**提交规则：**
-- 格式：`<type>: AI <subject>`
-- 类型：feat、fix、docs、refactor 等
-- 标题使用英文
+**格式：** `<type>: AI <subject>` (feat/fix/docs/refactor)
 
-**提交流程：**
-1. 小节点 → 子仓库提交
-2. 阶段完成 → 外部仓库提交
+**流程：** 子仓库先提交 → 外部仓库提交
 
-**Git 命令要求：** 使用 `git -C <repo_path> <cmd>` 替代 `cd && git`
+**Git 命令：** 使用 `git -C <repo_path> <cmd>` 替代 `cd && git`
 
 ## 编码准则
 
