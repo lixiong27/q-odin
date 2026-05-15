@@ -20,7 +20,7 @@
 
 ## Git 提交规范
 
-**仓库结构：** 外部 `q-odin/` / 后端 `odin_server/` / 前端 `odin_node/`
+**仓库结构：** `q-odin/`（外部主仓，内含子仓 `odin_server/` + `odin_node/`）
 
 **格式：** `<type>: AI <subject>` (feat/fix/docs/refactor)
 
