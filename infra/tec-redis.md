@@ -2,7 +2,7 @@
 
 ## 客户端类型
 
-本项目使用 `RedisAsyncClient`（qclient-redis），详见 [components.md](components.md#2-redis-操作)
+本项目使用 `RedisAsyncClient`（qclient-redis），详见 [tec-components.md](tec-components.md#3-redis-操作)
 
 ## Redis Key 命名规范
 

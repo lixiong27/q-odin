@@ -71,7 +71,9 @@
 **核心能力：**
 - Orchestrator 编排：SearchOrchestrator 协调完整检索管道（埋点 → 路由 → 聚合 → 安全 → 组装）
 - Router 路由：根据查询复杂度决定 MySQL 还是 ES
-- Aggregator 回查：ES 只存搜索字段，展示字段从 MySQL 回查补全
+- Aggregator 回查：ES 只存搜索字段，展示字段从 MySQL 回查补全（contentTitle/publishUrl/coverUrl）
+- 预览数据组装：DataAggregator 解析 content_relations JSON，按内容类型查询 video/image/text 表
+- AI 标签分组展示：TagAssembler 启动缓存 tagName→顶级分类，详情页按一级分类分组渲染
 - 字典驱动渲染：ContentDictService 加载 QConfig JSON，前端所有枚举/列配置/指标分组动态渲染
 - 异步埋点：独立线程池，失败不阻塞主流程
 - 安全过滤链：参数校验 → URL 安全校验 → 响应
@@ -79,16 +81,27 @@
 **关键文件：**
 - `service/retrieve/service/SearchOrchestrator.java` — 编排核心
 - `service/retrieve/service/SearchRouter.java` — 路由决策
-- `service/retrieve/service/ContentDataAggregator.java` — 数据聚合回查
+- `service/retrieve/service/ContentDataAggregator.java` — 数据聚合回查（检索管线）
+- `service/content/DataAggregator.java` — 搜索列表回填（contentTitle/publishUrl/coverUrl）+ 预览数据组装
+- `service/content/TagAssembler.java` — 启动缓存 tagName→顶级分类，AI 标签分组展示
 - `service/retrieve/service/ContentTrackService.java` — 异步埋点
 - `service/retrieve/filter/ContentRetrieveValidationFilter.java` — 参数校验
 - `service/retrieve/filter/ContentSecurityFilter.java` — URL 安全校验
 - `service/retrieve/service/ContentResponseAssembler.java` — 字典驱动 fieldMeta 组装
 - `service/download/ContentDownloadService.java` + `DownloadController.java`
 
-**API：** `GET/POST /api/content/retrieve/search`、`GET /api/content/retrieve/detail/{id}`、`GET /api/content/download`
+**API：**
+- `GET/POST /api/content/retrieve/search` — 检索搜索
+- `GET /api/content/retrieve/detail/{id}` — 检索详情
+- `GET /api/content/download` — 下载打包
+- `POST /api/content/search` — ES 搜索
+- `GET /api/content/preview` — 内容预览（视频/图片/正文）
+- `GET /api/content/detail` — 内容详情（含标签分组 + 预览）
+- `PUT /api/content/tags` — 编辑标签
 
 **前端：** `src/pages/content/list.jsx`（列表页）、`detail.jsx`（详情页）、`src/components/TagTreeSelector/`（标签树选择器）
+
+**文档：** [docs/20260517-content-list-preview-redesign/design.md](../docs/20260517-content-list-preview-redesign/design.md)
 
 ---
 

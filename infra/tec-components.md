@@ -296,6 +296,53 @@ long startTime = System.nanoTime();
 QMonitor.recordOne("metric_name", System.nanoTime() - startTime);
 ```
 
+## 7. Elasticsearch
+
+### 关键组件
+
+- `ElasticsearchDataSource` — 通用操作封装（批量增删、索引管理）
+- `ContentSearchDocument` — 内容搜索文档模型
+- `ContentSearchDocAssembler` — 6 表 JOIN 组装 Document
+
+### 数据流
+
+```
+MySQL 6 表 → ContentSearchDocAssembler → ES 索引写入
+ES 搜索 → DataAggregator 回查 MySQL 补充展示字段
+```
+
+### ES 查询模板
+
+```java
+@Resource
+private ElasticsearchDataSource elasticsearchDataSource;
+
+// 构建查询
+SearchSourceBuilder builder = new SearchSourceBuilder();
+BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+boolQuery.filter(QueryBuilders.termsQuery("content_type", types));
+builder.query(boolQuery);
+builder.sort("publish_time", SortOrder.DESC);
+builder.from(0);
+builder.size(20);
+
+// 执行
+SearchResponse response = elasticsearchDataSource.search(indexName, builder);
+
+// 解析
+for (SearchHit hit : response.getHits().getHits()) {
+    Map<String, Object> source = hit.getSourceAsMap();
+    // source.get("base_id") 等 snake_case 字段
+}
+```
+
+### 关键点
+
+1. ES 字段名使用 snake_case
+2. keyword 数组字段（city/poi/ai_tag）读回需用 Gson 反序列化
+3. 展示字段（contentTitle/publishUrl/coverUrl）由 DataAggregator 从 MySQL 回查补全
+4. 排序字段有白名单校验
+
 ## 8. HttpUtils HTTP客户端
 
 路径：`com.qunar.ug.flight.contact.odin.server.infra.util.HttpUtils`
@@ -359,20 +406,3 @@ User user = HttpUtils.postHttp(url, jsonBody, headers, 30000, TimeUnit.MILLISECO
 1. 超时时间传 `QConfig` 配置值（如 `AigcQConfig.getAsrTimeout()`），兜底走类静态默认值（120s）
 2. 异常时返回 `null`，调用方需判空
 3. 所有请求自动记录 QMonitor 耗时指标（`post_http_json`、`get_http` 等）
-
-```java
-@Resource
-private RestHighLevelClient restHighLevelClient;
-
-@Resource
-private ElasticsearchDataSource elasticsearchDataSource;
-
-// 批量插入
-elasticsearchDataSource.batchInsert(index, dataList);
-
-// 检查索引存在
-elasticsearchDataSource.existIndex(index);
-
-// 创建索引
-elasticsearchDataSource.create(index, settings, mapping);
-```
