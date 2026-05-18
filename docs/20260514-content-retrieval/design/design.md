@@ -61,15 +61,15 @@ Client (前端)
 
 ### 1.2 与已有模块的关系
 
-| 已有模块（已实现） | 本模块的使用方式 |
-|-------------------|----------------|
-| `ContentSearchService` | **复用**，在其基础上包一层只提取 base_id |
-| `ContentSearchDocAssembler` | **复用**，DataAggregator 调用其批量查询能力 |
-| `ContentSearchDocument` | **复用**，直接作为聚合后的全量数据载体 |
-| `ContentSearchRequest` | **复用/扩展**，新增路由相关参数 |
-| `ContentSearchResponse` / `ContentSearchHit` | **复用/扩展**，Response 新增 `fieldMeta` 字段 |
-| `ContentSearchController` | **不修改**，新建 `RetrieveController` 作为检索入口 |
-| `ElasticsearchDataSource` | **不直接使用**，通过 ContentSearchService 间接调用 |
+| 已有模块（已实现）                                    | 本模块的使用方式                               |
+| -------------------------------------------- | -------------------------------------- |
+| `ContentSearchService`                       | **复用**，在其基础上包一层只提取 base_id             |
+| `ContentSearchDocAssembler`                  | **复用**，DataAggregator 调用其批量查询能力        |
+| `ContentSearchDocument`                      | **复用**，直接作为聚合后的全量数据载体                  |
+| `ContentSearchRequest`                       | **复用/扩展**，新增路由相关参数                     |
+| `ContentSearchResponse` / `ContentSearchHit` | **复用/扩展**，Response 新增 `fieldMeta` 字段   |
+| `ContentSearchController`                    | **不修改**，新建 `RetrieveController` 作为检索入口 |
+| `ElasticsearchDataSource`                    | **不直接使用**，通过 ContentSearchService 间接调用 |
 
 ### 1.3 分层职责
 
