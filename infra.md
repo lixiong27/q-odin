@@ -89,3 +89,4 @@ MySQL + MyBatis
 | 新增 Redis 缓存   | 原始内容同步      | `RedisAsyncClient` + `odin:module:xxx` 命名，参考 [tec-redis.md](infra/tec-redis.md)                                                                                            |
 | 新增 HTTP 调用    | AI 服务       | `HttpUtils.postHttp()`，超时时间走 QConfig 配置，参考 [tec-components.md](infra/tec-components.md#8-httputils-http客户端)                                                                |
 | 新增监控打点        | 全模块         | `QMonitor.recordOne("metric_name")`，参考 [tec-components.md](infra/tec-components.md#6-qmonitor-监控)                                                                          |
+| 新增线程池 | 内容下载等 | 统一在 `infra/config/executor/` 下新建 Spring `@Configuration`，使用 `ThreadPoolTaskExecutor` 声明 `@Bean`，参考 `DownloadExecutorConfig`、`RawContentSyncExecutorConfig` |
