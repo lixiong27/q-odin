@@ -27,3 +27,8 @@ classes/**
 .obsidian
 .qunar-workspace
 video_output/
+
+# IDE / tools
+.claude/
+.codegraph/
+.cursor/
