@@ -1,0 +1,12 @@
+标签管理,菜单,tag,,,admin
+可视化配置,菜单,/tag/visual,,标签管理,admin
+分类管理,菜单,/tag/category,,标签管理,admin
+标签列表,菜单,/tag/list,,标签管理,admin
+内容管理,菜单,content,,,admin
+内容库,菜单,/content/list,,内容管理,admin
+内容详情页,菜单,/content/detail,,内容管理,admin
+任务管理,菜单,task,,,admin
+任务列表,菜单,/task/list,,任务管理,admin
+新建任务,菜单,/task/create,,任务管理,admin
+任务详情页,菜单,/task/detail,,任务管理,admin
+AI管理,菜单,ai,,,admin

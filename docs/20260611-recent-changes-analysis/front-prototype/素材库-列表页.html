@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>素材库 - 列表页</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1677FF',
+            sidebar: '#1E293B',
+            sidebarActive: '#1677FF',
+            sidebarText: '#F1F5F9',
+          },
+        },
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; }
+    .filter-label { font-size: 13px; color: #666; margin-bottom: 4px; }
+    .filter-input { border: 1px solid #d9d9d9; border-radius: 6px; padding: 4px 8px; font-size: 13px; outline: none; width: 100%; }
+    .filter-input:focus { border-color: #1677FF; box-shadow: 0 0 0 2px rgba(22,119,255,0.1); }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .checkbox-item { display: flex; align-items: center; gap: 4px; font-size: 13px; cursor: pointer; }
+    .checkbox-item input { accent-color: #1677FF; }
+    .range-input { display: flex; align-items: center; gap: 6px; }
+    .range-input input { width: 80px; }
+    .btn { border: 1px solid #d9d9d9; border-radius: 6px; padding: 4px 14px; font-size: 13px; cursor: pointer; background: #fff; }
+    .btn-primary { background: #1677FF; color: #fff; border-color: #1677FF; }
+    .btn-primary:hover { background: #4096FF; }
+    .btn-sm { padding: 2px 8px; font-size: 12px; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th { text-align: left; padding: 10px 12px; font-size: 13px; font-weight: 500; color: #666; border-bottom: 1px solid #f0f0f0; background: #fafafa; white-space: nowrap; }
+    .table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+    .table tr:hover td { background: #f5f9ff; }
+    .tag { display: inline-block; background: #f0f5ff; color: #1677FF; border: 1px solid #d6e4ff; border-radius: 4px; padding: 0 6px; font-size: 12px; line-height: 22px; }
+    .cover-img { width: 60px; height: 40px; border-radius: 4px; object-fit: cover; background: #f0f0f0; }
+    .sidebar-item { padding: 8px 16px; font-size: 14px; color: #94a3b8; cursor: pointer; border-left: 3px solid transparent; }
+    .sidebar-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+    .sidebar-item.active { background: rgba(22,119,255,0.15); color: #fff; border-left-color: #1677FF; }
+    .sidebar-label { padding: 12px 16px 4px; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+  </style>
+</head>
+<body>
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <aside class="w-56 bg-sidebar text-sidebarText flex-shrink-0 h-full overflow-y-auto" style="background:#1E293B;">
+    <div class="p-4 border-b border-gray-700">
+      <span class="font-semibold text-white text-base">ODIN 内容中台</span>
+    </div>
+    <div class="py-2">
+      <div class="sidebar-label">内容管理</div>
+      <div class="sidebar-item">内容库</div>
+      <div class="sidebar-item active">素材库</div>
+      <div class="sidebar-label">系统管理</div>
+      <div class="sidebar-item">标签管理</div>
+      <div class="sidebar-item">任务管理</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 overflow-y-auto bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+      <h1 class="text-lg font-semibold text-gray-800">素材库</h1>
+      <div class="text-sm text-gray-400">共 <span class="font-medium text-gray-600">128</span> 条</div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white mx-4 mt-4 rounded-lg border border-gray-200">
+      <!-- Row 1 -->
+      <div class="grid grid-cols-4 gap-4 p-4 pb-2">
+        <!-- 素材名称 -->
+        <div>
+          <div class="filter-label">素材名称</div>
+          <input class="filter-input" placeholder="输入素材名称模糊搜索" />
+        </div>
+        <!-- 素材时长 -->
+        <div>
+          <div class="filter-label">素材时长（秒）</div>
+          <div class="range-input">
+            <input class="filter-input" placeholder="最小值" />
+            <span class="text-gray-400">—</span>
+            <input class="filter-input" placeholder="最大值" />
+          </div>
+        </div>
+        <!-- 发布时间 -->
+        <div>
+          <div class="filter-label">发布时间</div>
+          <div class="flex gap-2 items-center">
+            <input class="filter-input" type="date" style="width:auto;flex:1;" />
+            <span class="text-gray-400">—</span>
+            <input class="filter-input" type="date" style="width:auto;flex:1;" />
+          </div>
+        </div>
+        <!-- 画面比例 -->
+        <div>
+          <div class="filter-label">画面比例</div>
+          <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" /> 9:16</label>
+            <label class="checkbox-item"><input type="checkbox" /> 4:3</label>
+            <label class="checkbox-item"><input type="checkbox" /> 3:4</label>
+            <label class="checkbox-item"><input type="checkbox" /> 16:9</label>
+            <label class="checkbox-item"><input type="checkbox" /> 其他</label>
+          </div>
+        </div>
+      </div>
+      <!-- Row 2 -->
+      <div class="grid grid-cols-4 gap-4 px-4 pb-2">
+        <!-- 点赞量 -->
+        <div>
+          <div class="filter-label">点赞量</div>
+          <div class="range-input">
+            <input class="filter-input" placeholder="最小值" />
+            <span class="text-gray-400">—</span>
+            <input class="filter-input" placeholder="最大值" />
+          </div>
+        </div>
+        <!-- 收藏量 -->
+        <div>
+          <div class="filter-label">收藏量</div>
+          <div class="range-input">
+            <input class="filter-input" placeholder="最小值" />
+            <span class="text-gray-400">—</span>
+            <input class="filter-input" placeholder="最大值" />
+          </div>
+        </div>
+        <!-- 分辨率 -->
+        <div>
+          <div class="filter-label">分辨率</div>
+          <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" /> 4K</label>
+            <label class="checkbox-item"><input type="checkbox" /> 2K</label>
+            <label class="checkbox-item"><input type="checkbox" /> 1080P</label>
+            <label class="checkbox-item"><input type="checkbox" /> 720P</label>
+            <label class="checkbox-item"><input type="checkbox" /> 其他</label>
+          </div>
+        </div>
+        <!-- 帧率 -->
+        <div>
+          <div class="filter-label">帧率</div>
+          <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" /> >= 30fps</label>
+            <label class="checkbox-item"><input type="checkbox" /> >= 24fps</label>
+            <label class="checkbox-item"><input type="checkbox" /> 24fps 以下</label>
+          </div>
+        </div>
+      </div>
+      <!-- Actions -->
+      <div class="px-4 pb-4 flex gap-2">
+        <button class="btn btn-primary">搜索</button>
+        <button class="btn">重置</button>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="flex items-center justify-between px-4 mt-4">
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-500">排序：</span>
+        <select class="filter-input" style="width:auto;padding:2px 24px 2px 8px;">
+          <option>发布时间</option>
+          <option>点赞量</option>
+          <option>收藏量</option>
+          <option>时长</option>
+        </select>
+        <button class="btn btn-sm"><i class="fa fa-arrow-up"></i></button>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-sm" onclick="alert('列配置弹窗')"><i class="fa fa-cog"></i> 列配置</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white mx-4 mt-2 rounded-lg border border-gray-200 overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:40px;"><input type="checkbox" /></th>
+            <th>ID</th>
+            <th>封面</th>
+            <th>素材名称</th>
+            <th>时长</th>
+            <th>画面比例</th>
+            <th>点赞量</th>
+            <th>收藏量</th>
+            <th>来源</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="checkbox" /></td>
+            <td class="text-gray-400">1</td>
+            <td><img class="cover-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40'%3E%3Crect fill='%23f3f4f6' width='60' height='40'/%3E%3Ctext x='12' y='24' font-size='10' fill='%23999'%3E封面%3C/text%3E%3C/svg%3E" /></td>
+            <td class="max-w-[160px] truncate">三亚度假酒店打卡攻略</td>
+            <td>30s</td>
+            <td><span class="tag">9:16</span></td>
+            <td class="font-medium">1.2K</td>
+            <td class="font-medium">500</td>
+            <td><span class="tag">抖音</span></td>
+            <td><a href="#" class="text-primary hover:underline text-sm">详情</a></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" /></td>
+            <td class="text-gray-400">2</td>
+            <td><img class="cover-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40'%3E%3Crect fill='%23f3f4f6' width='60' height='40'/%3E%3Ctext x='12' y='24' font-size='10' fill='%23999'%3E封面%3C/text%3E%3C/svg%3E" /></td>
+            <td class="max-w-[160px] truncate">北京故宫旅游攻略分享</td>
+            <td>45s</td>
+            <td><span class="tag">16:9</span></td>
+            <td class="font-medium">3.5K</td>
+            <td class="font-medium">1.2K</td>
+            <td><span class="tag">小红书</span></td>
+            <td><a href="#" class="text-primary hover:underline text-sm">详情</a></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" /></td>
+            <td class="text-gray-400">3</td>
+            <td><img class="cover-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40'%3E%3Crect fill='%23f3f4f6' width='60' height='40'/%3E%3Ctext x='12' y='24' font-size='10' fill='%23999'%3E封面%3C/text%3E%3C/svg%3E" /></td>
+            <td class="max-w-[160px] truncate">周末去哪玩——上海迪士尼</td>
+            <td>60s</td>
+            <td><span class="tag">4:3</span></td>
+            <td class="font-medium">8.9K</td>
+            <td class="font-medium">3.2K</td>
+            <td><span class="tag">抖音</span></td>
+            <td><a href="#" class="text-primary hover:underline text-sm">详情</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-between px-4 py-4">
+      <div class="text-sm text-gray-400">第 1-10 条，共 128 条</div>
+      <div class="flex gap-1 items-center">
+        <button class="btn btn-sm" disabled><i class="fa fa-angle-left"></i></button>
+        <button class="btn btn-sm btn-primary">1</button>
+        <button class="btn btn-sm">2</button>
+        <button class="btn btn-sm">3</button>
+        <button class="btn btn-sm">...</button>
+        <button class="btn btn-sm">13</button>
+        <button class="btn btn-sm"><i class="fa fa-angle-right"></i></button>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

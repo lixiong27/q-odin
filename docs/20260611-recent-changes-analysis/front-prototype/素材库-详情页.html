@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>素材详情</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1677FF',
+            sidebar: '#1E293B',
+            sidebarActive: '#1677FF',
+            sidebarText: '#F1F5F9',
+          },
+        },
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; background: #f5f5f5; }
+    .card { background: #fff; border-radius: 8px; border: 1px solid #e8e8e8; padding: 20px; }
+    .info-label { font-size: 13px; color: #999; margin-bottom: 2px; }
+    .info-value { font-size: 14px; color: #333; }
+    .tag { display: inline-block; background: #f0f5ff; color: #1677FF; border: 1px solid #d6e4ff; border-radius: 4px; padding: 2px 8px; font-size: 12px; line-height: 22px; margin: 2px; }
+    .sidebar-item { padding: 8px 16px; font-size: 14px; color: #94a3b8; cursor: pointer; border-left: 3px solid transparent; }
+    .sidebar-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+    .sidebar-item.active { background: rgba(22,119,255,0.15); color: #fff; border-left-color: #1677FF; }
+    .sidebar-label { padding: 12px 16px 4px; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+  </style>
+</head>
+<body>
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <aside class="w-56 bg-sidebar text-sidebarText flex-shrink-0 h-full overflow-y-auto" style="background:#1E293B;">
+    <div class="p-4 border-b border-gray-700">
+      <span class="font-semibold text-white text-base">ODIN 内容中台</span>
+    </div>
+    <div class="py-2">
+      <div class="sidebar-label">内容管理</div>
+      <div class="sidebar-item">内容库</div>
+      <div class="sidebar-item active">素材库</div>
+      <div class="sidebar-label">系统管理</div>
+      <div class="sidebar-item">标签管理</div>
+      <div class="sidebar-item">任务管理</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 overflow-y-auto bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white px-6 py-3 border-b border-gray-200 flex items-center gap-4">
+      <a href="#" class="text-primary text-sm hover:underline"><i class="fa fa-arrow-left"></i> 返回素材列表</a>
+      <h1 class="text-lg font-semibold text-gray-800">素材详情</h1>
+    </div>
+
+    <div class="p-6 grid grid-cols-3 gap-6">
+      <!-- Left: Video Player -->
+      <div class="col-span-2">
+        <div class="card p-0 overflow-hidden">
+          <div class="bg-black flex items-center justify-center" style="aspect-ratio:16/9;max-height:500px;">
+            <div class="text-gray-400 text-center">
+              <i class="fa fa-play-circle-o" style="font-size:48px;color:#666;"></i>
+              <div class="mt-2 text-sm">视频播放区域</div>
+              <div class="text-xs text-gray-600 mt-1">OSS 内部视频 URL 播放</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Basic Info -->
+        <div class="card mt-4">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-medium">基本信息</h2>
+          </div>
+          <div class="grid grid-cols-3 gap-y-4 gap-x-6">
+            <div>
+              <div class="info-label">素材名称</div>
+              <div class="info-value font-medium">三亚度假酒店打卡攻略</div>
+            </div>
+            <div>
+              <div class="info-label">素材ID</div>
+              <div class="info-value text-gray-500">douyin_734567890123456</div>
+            </div>
+            <div>
+              <div class="info-label">来源平台</div>
+              <div class="info-value"><span class="tag">抖音</span></div>
+            </div>
+            <div>
+              <div class="info-label">作者昵称</div>
+              <div class="info-value">旅行达人小张</div>
+            </div>
+            <div>
+              <div class="info-label">发布时间</div>
+              <div class="info-value">2026-06-01 12:00:00</div>
+            </div>
+            <div>
+              <div class="info-label">发布链接</div>
+              <div class="info-value"><a href="#" class="text-primary hover:underline text-sm">查看原文</a></div>
+            </div>
+            <div>
+              <div class="info-label">时长</div>
+              <div class="info-value">30s</div>
+            </div>
+            <div>
+              <div class="info-label">画面比例</div>
+              <div class="info-value"><span class="tag">9:16</span></div>
+            </div>
+            <div>
+              <div class="info-label">分辨率</div>
+              <div class="info-value">720 × 1280</div>
+            </div>
+            <div>
+              <div class="info-label">视频格式</div>
+              <div class="info-value">mp4</div>
+            </div>
+            <div>
+              <div class="info-label">视频大小</div>
+              <div class="info-value">15.2 MB</div>
+            </div>
+            <div>
+              <div class="info-label">帧率</div>
+              <div class="info-value">30 fps</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar -->
+      <div class="col-span-1 space-y-4">
+        <!-- Metrics Card -->
+        <div class="card">
+          <h2 class="text-base font-medium mb-4">热度指标</h2>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center py-2 border-b border-gray-50">
+              <span class="text-sm text-gray-500">点赞量</span>
+              <span class="text-base font-semibold">1.2K</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-50">
+              <span class="text-sm text-gray-500">收藏量</span>
+              <span class="text-base font-semibold">500</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-50">
+              <span class="text-sm text-gray-500">曝光量</span>
+              <span class="text-base font-semibold">52.3K</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-50">
+              <span class="text-sm text-gray-500">评论量</span>
+              <span class="text-base font-semibold">238</span>
+            </div>
+            <div class="flex justify-between items-center py-2">
+              <span class="text-sm text-gray-500">分享量</span>
+              <span class="text-base font-semibold">67</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Labels Card -->
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-medium">素材标签</h2>
+            <button class="text-primary text-sm hover:underline"><i class="fa fa-pencil"></i> 编辑</button>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <div class="text-xs text-gray-400 mb-2">通用标签</div>
+              <div>
+                <span class="tag">有人脸</span>
+                <span class="tag">户外</span>
+                <span class="tag">美食</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-400 mb-2">POI</div>
+              <div><span class="tag">三亚</span></div>
+            </div>
+            <div>
+              <div class="text-xs text-gray-400 mb-2">城市</div>
+              <div><span class="tag">三亚</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Source Info -->
+        <div class="card">
+          <h2 class="text-base font-medium mb-4">来源信息</h2>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-400">原始视频链接</span>
+              <a href="#" class="text-primary hover:underline">查看</a>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">OSS 视频链接</span>
+              <a href="#" class="text-primary hover:underline">查看</a>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">OSS 封面链接</span>
+              <a href="#" class="text-primary hover:underline">查看</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

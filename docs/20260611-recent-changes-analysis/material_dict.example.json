@@ -1,0 +1,55 @@
+{
+  "sources": [
+    { "label": "抖音", "value": "douyin" },
+    { "label": "小红书", "value": "redbook" }
+  ],
+  "materialTypes": [
+    { "label": "视频", "value": "video" },
+    { "label": "图片", "value": "image" }
+  ],
+  "aspectRatios": [
+    { "label": "9:16", "value": "9:16" },
+    { "label": "4:3", "value": "4:3" },
+    { "label": "3:4", "value": "3:4" },
+    { "label": "16:9", "value": "16:9" },
+    { "label": "其他", "value": "其他" }
+  ],
+  "resolutions": [
+    { "label": "4K", "value": "4k" },
+    { "label": "2K", "value": "2k" },
+    { "label": "1080P", "value": "1080p" },
+    { "label": "720P", "value": "720p" },
+    { "label": "其他", "value": "other" }
+  ],
+  "frameRates": [
+    { "label": ">= 30fps", "value": "gte30" },
+    { "label": ">= 24fps", "value": "gte24" },
+    { "label": "24fps 以下", "value": "lt24" }
+  ],
+  "quickDateRanges": [
+    { "label": "半年内", "value": "180d" },
+    { "label": "1年内", "value": "365d" },
+    { "label": "2年内", "value": "730d" }
+  ],
+  "metricFilters": [
+    { "key": "totalLikes", "label": "点赞量", "type": "integer" },
+    { "key": "totalFavorites", "label": "收藏量", "type": "integer" }
+  ],
+  "columns": [
+    { "field": "id", "label": "ID", "renderType": "text", "defaultField": true },
+    { "field": "coverUrl", "label": "封面", "renderType": "image", "defaultField": true },
+    { "field": "title", "label": "素材名称", "renderType": "text", "defaultField": true },
+    { "field": "duration", "label": "时长", "renderType": "duration", "defaultField": true },
+    { "field": "aspectRatio", "label": "画面比例", "renderType": "tag", "defaultField": true },
+    { "field": "totalLikes", "label": "点赞量", "renderType": "integer", "defaultField": true },
+    { "field": "totalFavorites", "label": "收藏量", "renderType": "integer", "defaultField": true },
+    { "field": "source", "label": "来源", "renderType": "tag", "defaultField": true },
+    { "field": "materialId", "label": "素材ID", "renderType": "text", "defaultField": false },
+    { "field": "authorName", "label": "作者昵称", "renderType": "text", "defaultField": false },
+    { "field": "publishTime", "label": "发布时间", "renderType": "text", "defaultField": false },
+    { "field": "totalViews", "label": "曝光量", "renderType": "integer", "defaultField": false },
+    { "field": "totalComments", "label": "评论量", "renderType": "integer", "defaultField": false },
+    { "field": "width", "label": "分辨率", "renderType": "text", "defaultField": false },
+    { "field": "videoFormat", "label": "格式", "renderType": "text", "defaultField": false }
+  ]
+}
