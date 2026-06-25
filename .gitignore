@@ -32,3 +32,6 @@ video_output/
 .claude/
 .codegraph/
 .cursor/
+
+# Windows reserved names
+nul
